@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>HopClaude Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a2e;
+    min-height: 100vh;
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    color: #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 40px 20px;
+  }
+
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  h1 span { color: #DA7757; }
+
+  .desc { font-size: 14px; color: #888; text-align: center; max-width: 420px; line-height: 1.7; }
+
+  /* ── 위젯 미리보기 ── */
+  .preview-area {
+    position: relative;
+    width: 340px; height: 220px;
+    background: #0f0f1a;
+    border: 1px solid #2a2a4a;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex; align-items: flex-end; justify-content: flex-end;
+    padding: 16px;
+  }
+  .preview-label {
+    position: absolute; top: 12px; left: 16px;
+    font-size: 11px; color: #444; letter-spacing: 0.5px;
+  }
+
+  /* ── 위젯 ── */
+  .widget-wrap {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center;
+    -webkit-user-select: none; user-select: none;
+  }
+  .speech {
+    position: absolute; bottom: 118px;
+    background: #fff; color: #1a1a1a;
+    border: 0.5px solid rgba(0,0,0,0.15);
+    padding: 6px 12px; border-radius: 14px;
+    font-size: 12px; font-weight: 500; white-space: nowrap;
+    opacity: 0; transform: translateY(6px);
+    transition: opacity .2s ease, transform .2s ease;
+    pointer-events: none;
+  }
+  .speech.show { opacity: 1; transform: translateY(0); }
+  .speech::after {
+    content: ""; position: absolute; bottom: -5px; left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: rgba(0,0,0,0.15); border-bottom: 0;
+  }
+  .speech::before {
+    content: ""; position: absolute; bottom: -4px; left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #fff; border-bottom: 0;
+    z-index: 1;
+  }
+  #jumper { cursor: pointer; transition: opacity 0.4s; }
+  .shadow {
+    width: 54px; height: 6px;
+    background: rgba(0,0,0,0.18); border-radius: 50%;
+    margin-top: 4px;
+  }
+
+  /* ── 컨트롤 패널 ── */
+  .controls {
+    display: flex; flex-direction: column; gap: 16px; width: 340px;
+  }
+  .btn-row { display: flex; gap: 12px; }
+  button {
+    flex: 1;
+    padding: 12px 16px;
+    border: none; border-radius: 10px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: transform 0.1s, opacity 0.1s;
+  }
+  button:active { transform: scale(0.97); opacity: 0.85; }
+
+  .btn-stop {
+    background: #1e7a3e; color: #fff;
+  }
+  .btn-notify {
+    background: #b85d00; color: #fff;
+  }
+  .btn-demo {
+    background: #2a2a5a; color: #aaa;
+    border: 1px solid #3a3a6a;
+  }
+  .btn-demo.running {
+    background: #1a3a5a; color: #6af;
+    border-color: #6af;
+  }
+
+  /* ── 이벤트 로그 ── */
+  .log {
+    width: 340px;
+    background: #0f0f1a;
+    border: 1px solid #2a2a4a;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 12px; font-family: monospace;
+    max-height: 120px; overflow-y: auto;
+    display: flex; flex-direction: column-reverse; gap: 4px;
+  }
+  .log-entry { display: flex; gap: 8px; }
+  .log-time { color: #555; }
+  .log-stop { color: #4caf50; }
+  .log-notif { color: #ff9800; }
+  .log-info { color: #4a9eff; }
+
+</style>
+</head>
+<body>
+
+<h1><span>Hop</span>Claude</h1>
+<p class="desc">Claude Code가 응답을 완료하거나 권한 확인을 기다릴 때,<br>캐릭터가 점프하며 알려주는 데스크톱 위젯 데모입니다.</p>
+
+<!-- 위젯 미리보기 -->
+<div class="preview-area">
+  <span class="preview-label">WIDGET PREVIEW</span>
+  <div class="widget-wrap">
+    <div class="speech" id="speech">응답 도착!</div>
+    <div id="jumper" title="클릭해서 잠시 숨기기">
+      <svg width="86" height="54" viewBox="0 0 256 160" fill="none"
+           xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+        <!-- body -->
+        <rect x="32"  y="0"   width="193" height="33" fill="#DA7757"/>
+        <rect x="32"  y="32"  width="33"  height="33" fill="#DA7757"/>
+        <rect x="64"  y="32"  width="17"  height="33" fill="#FFFFFF"/>
+        <rect x="80"  y="32"  width="97"  height="33" fill="#DA7757"/>
+        <rect x="176" y="32"  width="17"  height="33" fill="#FFFFFF"/>
+        <rect x="192" y="32"  width="33"  height="33" fill="#DA7757"/>
+        <rect x="0"   y="64"  width="256" height="33" fill="#DA7757"/>
+        <rect x="32"  y="96"  width="193" height="33" fill="#DA7757"/>
+        <!-- legs -->
+        <rect x="48"  y="128" width="17"  height="33" fill="#DA7757"/>
+        <rect x="80"  y="128" width="17"  height="33" fill="#DA7757"/>
+        <rect x="160" y="128" width="17"  height="33" fill="#DA7757"/>
+        <rect x="192" y="128" width="17"  height="33" fill="#DA7757"/>
+      </svg>
+    </div>
+    <div class="shadow" id="shadow"></div>
+  </div>
+</div>
+
+<!-- 컨트롤 -->
+<div class="controls">
+  <div class="btn-row">
+    <button class="btn-stop" onclick="trigger('Stop')">✅ 응답 완료 (Stop)</button>
+    <button class="btn-notify" onclick="trigger('Notification')">🔔 확인 필요 (Notification)</button>
+  </div>
+  <button class="btn-demo" id="demoBtn" onclick="toggleDemo()">▶ 자동 데모 시작</button>
+</div>
+
+<!-- 이벤트 로그 -->
+<div class="log" id="log">
+  <div class="log-entry"><span class="log-time">--:--:--</span><span class="log-info">대기 중... 버튼을 눌러 이벤트를 발생시켜보세요.</span></div>
+</div>
+
+<script>
+const jumper  = document.getElementById('jumper');
+const shadow  = document.getElementById('shadow');
+const speech  = document.getElementById('speech');
+const logEl   = document.getElementById('log');
+const demoBtn = document.getElementById('demoBtn');
+
+// ── 물리 상수 ──
+const GRAVITY           = 0.0018;
+const RESTITUTION_BIG   = 0.82;
+const RESTITUTION_SMALL = 0.52;
+const MIN_V             = 0.12;
+const MAX_H             = 44;
+
+let animId      = null;
+let speechTimer = null;
+
+function startBounce() {
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  let vy = Math.sqrt(2 * GRAVITY * MAX_H);
+  let y  = 0;
+  let prev = null;
+  let bounceCount = 0;
+
+  function step(ts) {
+    if (prev === null) { prev = ts; animId = requestAnimationFrame(step); return; }
+    const dt = Math.min(ts - prev, 20);
+    prev = ts;
+    vy -= GRAVITY * dt;
+    y  += vy * dt;
+    if (y <= 0) {
+      y = 0;
+      bounceCount++;
+      const r = bounceCount <= 2 ? RESTITUTION_BIG : RESTITUTION_SMALL;
+      vy = Math.abs(vy) * r;
+      if (vy < MIN_V) {
+        jumper.style.transform = 'translateY(0px)';
+        shadow.style.width   = '54px';
+        shadow.style.opacity = '0.18';
+        animId = null;
+        return;
+      }
+    }
+    const ratio = Math.max(0, 1 - y / MAX_H);
+    jumper.style.transform = `translateY(${-y.toFixed(2)}px)`;
+    shadow.style.width   = `${(20 + ratio * 34).toFixed(1)}px`;
+    shadow.style.opacity = (0.05 + ratio * 0.13).toFixed(2);
+    animId = requestAnimationFrame(step);
+  }
+  animId = requestAnimationFrame(step);
+}
+
+function trigger(event, silent) {
+  const text     = event === 'Stop' ? '응답 도착!' : '확인 필요!';
+  const logClass = event === 'Stop' ? 'log-stop' : 'log-notif';
+
+  speech.textContent = text;
+  speech.classList.add('show');
+  clearTimeout(speechTimer);
+  speechTimer = setTimeout(() => speech.classList.remove('show'), 2800);
+  startBounce();
+
+  if (!silent) addLog(event, text, logClass);
+}
+
+function addLog(event, text, cls) {
+  const now = new Date();
+  const ts  = [now.getHours(), now.getMinutes(), now.getSeconds()]
+                .map(n => String(n).padStart(2, '0')).join(':');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">${ts}</span><span class="${cls}">[${event}] ${text}</span>`;
+  logEl.prepend(entry);
+  while (logEl.children.length > 20) logEl.removeChild(logEl.lastChild);
+}
+
+// 클릭 시 5초 숨기기
+jumper.addEventListener('click', () => {
+  jumper.style.opacity = '0.15';
+  addLog('Click', '5초간 숨김', 'log-info');
+  setTimeout(() => { jumper.style.opacity = '1'; }, 5000);
+});
+
+// ── 자동 데모 ──
+const demoScript = [
+  { delay: 1200, event: 'Stop' },
+  { delay: 3500, event: 'Notification' },
+  { delay: 2800, event: 'Stop' },
+  { delay: 4000, event: 'Notification' },
+  { delay: 2000, event: 'Stop' },
+];
+let demoIdx = 0;
+let demoTimeout = null;
+
+function runDemoStep() {
+  if (demoIdx >= demoScript.length) { demoIdx = 0; }
+  const step = demoScript[demoIdx++];
+  demoTimeout = setTimeout(() => {
+    trigger(step.event);
+    if (demoIdx < demoScript.length) runDemoStep();
+    else {
+      // 한 사이클 끝나면 잠시 후 재시작
+      demoTimeout = setTimeout(() => { demoIdx = 0; runDemoStep(); }, 2000);
+    }
+  }, step.delay);
+}
+
+function toggleDemo() {
+  if (demoTimeout) {
+    clearTimeout(demoTimeout);
+    demoTimeout = null;
+    demoIdx = 0;
+    demoBtn.textContent = '▶ 자동 데모 시작';
+    demoBtn.classList.remove('running');
+    addLog('Demo', '자동 데모 정지', 'log-info');
+  } else {
+    demoBtn.textContent = '⏹ 자동 데모 정지';
+    demoBtn.classList.add('running');
+    addLog('Demo', '자동 데모 시작', 'log-info');
+    runDemoStep();
+  }
+}
+</script>
+</body>
+</html>
