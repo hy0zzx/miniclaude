@@ -224,7 +224,6 @@ def run_widget(sw: int, sh: int):
     RESTITUTION_SMALL = 0.52
     MIN_V             = 0.12
     MAX_H             = 44.0
-    IDLE_H            = 8.0      # 클릭 대기 중 아이들 반복 점프 높이
 
     # ── 레이아웃 상수 ──────────────────────────────────────────────────────
     CHAR_W, CHAR_H = 86, 54
@@ -339,9 +338,7 @@ def run_widget(sw: int, sh: int):
                 if self._vy < MIN_V:
                     self._y = 0.0
                     if self._waiting_for_click:
-                        # 클릭 대기 중: 작은 아이들 점프 반복
-                        self._vy = _math.sqrt(2 * GRAVITY * IDLE_H)
-                        self._bounces = 99  # RESTITUTION_SMALL 즉시 적용
+                        self._start_bounce()  # 전체 사이클 처음부터 반복
                     else:
                         self._atimer.stop()
             self.update()
