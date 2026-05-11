@@ -159,17 +159,19 @@ def register_autostart():
 
 
 def register_hook():
-    """~/.claude/settings.json 에 Stop / Notification 훅을 등록.
+    """~/.claude/settings.json 에 Stop / Notification / PreToolUse 훅을 등록.
     기존 훅 목록에 추가하며, HopClaude 항목이 이미 있으면 갱신."""
     exe = get_exe_path()
 
     if getattr(sys, "frozen", False):
-        cmd_stop   = f'"{exe}" --hook Stop'
-        cmd_notify = f'"{exe}" --hook Notification'
+        cmd_stop     = f'"{exe}" --hook Stop'
+        cmd_notify   = f'"{exe}" --hook Notification'
+        cmd_pretool  = f'"{exe}" --hook PreToolUse'
     else:
         # 개발 모드: widget.py 자체를 --hook 모드로 직접 호출
-        cmd_stop   = f'"{sys.executable}" "{exe}" --hook Stop'
-        cmd_notify = f'"{sys.executable}" "{exe}" --hook Notification'
+        cmd_stop     = f'"{sys.executable}" "{exe}" --hook Stop'
+        cmd_notify   = f'"{sys.executable}" "{exe}" --hook Notification'
+        cmd_pretool  = f'"{sys.executable}" "{exe}" --hook PreToolUse'
 
     candidates = [
         os.path.expanduser("~/.claude/settings.json"),
@@ -197,6 +199,7 @@ def register_hook():
     hooks = settings.setdefault("hooks", {})
     hooks["Stop"]         = upsert_hook(hooks.get("Stop", []),         cmd_stop)
     hooks["Notification"] = upsert_hook(hooks.get("Notification", []), cmd_notify)
+    hooks["PreToolUse"]   = upsert_hook(hooks.get("PreToolUse", []),   cmd_pretool)
 
     with open(settings_path, "w", encoding="utf-8") as f:
         json.dump(settings, f, ensure_ascii=False, indent=2)
@@ -546,7 +549,12 @@ def main():
             payload = json.loads(raw)
         except Exception:
             payload = {}
-        message = payload.get("message", "응답 도착!" if event == "Stop" else "확인 필요!")[:40]
+        if event == "PreToolUse":
+            tool = payload.get("tool_name", "tool")
+            message = f"{tool} 승인 필요"
+        else:
+            message = payload.get("message", "응답 도착!" if event == "Stop" else "확인 필요!")
+        message = message[:40]
         body    = json.dumps({"event": event, "message": message}).encode()
 
         secret  = get_widget_secret()
