@@ -224,6 +224,7 @@ def run_widget(sw: int, sh: int):
     RESTITUTION_SMALL = 0.52
     MIN_V             = 0.12
     MAX_H             = 44.0
+    IDLE_H            = 8.0      # 클릭 대기 중 아이들 반복 점프 높이
 
     # ── 레이아웃 상수 ──────────────────────────────────────────────────────
     CHAR_W, CHAR_H = 86, 54
@@ -298,15 +299,16 @@ def run_widget(sw: int, sh: int):
             self._speech   = ""
             self._speech_a = 0     # 말풍선 불투명도 0-255
 
-            self._drag_pos = QPoint()
+            self._drag_pos        = QPoint()
+            self._waiting_for_click = False
 
             self._atimer = QTimer(self)
             self._atimer.setInterval(16)
             self._atimer.timeout.connect(self._step)
 
-            self._stimer = QTimer(self)
-            self._stimer.setSingleShot(True)
-            self._stimer.timeout.connect(self._hide_speech)
+            self._ctimer = QTimer(self)   # 전역 마우스 클릭 감지
+            self._ctimer.setInterval(50)
+            self._ctimer.timeout.connect(self._check_click)
 
             self._ptimer = QTimer(self)
             self._ptimer.setInterval(700)
@@ -336,20 +338,41 @@ def run_widget(sw: int, sh: int):
                 self._vy = abs(self._vy) * r
                 if self._vy < MIN_V:
                     self._y = 0.0
-                    self._atimer.stop()
+                    if self._waiting_for_click:
+                        # 클릭 대기 중: 작은 아이들 점프 반복
+                        self._vy = _math.sqrt(2 * GRAVITY * IDLE_H)
+                        self._bounces = 99  # RESTITUTION_SMALL 즉시 적용
+                    else:
+                        self._atimer.stop()
             self.update()
 
         def trigger(self, event: str, message: str = ""):
             text = message or ("응답 도착!" if event == "Stop" else "확인 필요!")
-            self._speech   = text
-            self._speech_a = 255
-            self._stimer.start(2800)
+            self._speech          = text
+            self._speech_a        = 255
+            self._waiting_for_click = True
+            # 이전 클릭 누적값 소비 후 감지 시작
+            if sys.platform == "win32":
+                import ctypes
+                ctypes.windll.user32.GetAsyncKeyState(0x01)  # 잔여 비트 초기화
+            self._ctimer.start()
             self._start_bounce()
             self.update()
 
-        def _hide_speech(self):
-            self._speech_a = 0
-            self.update()
+        def _check_click(self):
+            if not self._waiting_for_click:
+                self._ctimer.stop()
+                return
+            clicked = False
+            if sys.platform == "win32":
+                import ctypes
+                # bit 0: 마지막 호출 이후 눌렸으면 1
+                clicked = bool(ctypes.windll.user32.GetAsyncKeyState(0x01) & 1)
+            if clicked:
+                self._waiting_for_click = False
+                self._ctimer.stop()
+                self._speech_a = 0
+                self.update()
 
         # ── 이벤트 폴링 ────────────────────────────────────────────────────
 
