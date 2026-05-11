@@ -237,17 +237,26 @@ def run_widget(sw: int, sh: int):
     CORAL = QColor(0xDA, 0x77, 0x57)
     WHITE = QColor(0xFF, 0xFF, 0xFF)
     _VW, _VH = 256.0, 160.0
-    _RAW = [
-        (32, 0, 193, 33, CORAL), (32, 32, 33, 33, CORAL),
-        (64, 32, 17, 33, WHITE), (80, 32, 97, 33, CORAL),
-        (176, 32, 17, 33, WHITE), (192, 32, 33, 33, CORAL),
-        (0, 64, 256, 33, CORAL), (32, 96, 193, 33, CORAL),
-        (48, 128, 17, 33, CORAL), (80, 128, 17, 33, CORAL),
-        (160, 128, 17, 33, CORAL), (192, 128, 17, 33, CORAL),
+    _sx = lambda v: round(v * CHAR_W / _VW)
+    _sy = lambda v: round(v * CHAR_H / _VH)
+    # 경계 좌표를 먼저 계산한 뒤 너비/높이를 차분으로 구해 1px 오차 누적 방지
+    Xb = [_sx(v) for v in (0, 32, 64, 80, 176, 192, 225, 256)]
+    Yb = [_sy(v) for v in (0, 32, 64, 96, 128, 160)]
+    Lx = [_sx(v) for v in (48, 65, 80, 97, 160, 177, 192, 209)]
+    RECTS = [
+        (Xb[1], Yb[0], Xb[6]-Xb[1], Yb[1]-Yb[0], CORAL),  # 머리 상단 바
+        (Xb[1], Yb[1], Xb[2]-Xb[1], Yb[2]-Yb[1], CORAL),  # 왼쪽 어깨
+        (Xb[2], Yb[1], Xb[3]-Xb[2], Yb[2]-Yb[1], WHITE),  # 왼쪽 눈
+        (Xb[3], Yb[1], Xb[4]-Xb[3], Yb[2]-Yb[1], CORAL),  # 코/입
+        (Xb[4], Yb[1], Xb[5]-Xb[4], Yb[2]-Yb[1], WHITE),  # 오른쪽 눈
+        (Xb[5], Yb[1], Xb[6]-Xb[5], Yb[2]-Yb[1], CORAL),  # 오른쪽 어깨
+        (Xb[0], Yb[2], Xb[7]-Xb[0], Yb[3]-Yb[2], CORAL),  # 몸통
+        (Xb[1], Yb[3], Xb[6]-Xb[1], Yb[4]-Yb[3], CORAL),  # 하체
+        (Lx[0], Yb[4], Lx[1]-Lx[0], Yb[5]-Yb[4], CORAL),  # 왼발1
+        (Lx[2], Yb[4], Lx[3]-Lx[2], Yb[5]-Yb[4], CORAL),  # 왼발2
+        (Lx[4], Yb[4], Lx[5]-Lx[4], Yb[5]-Yb[4], CORAL),  # 오른발1
+        (Lx[6], Yb[4], Lx[7]-Lx[6], Yb[5]-Yb[4], CORAL),  # 오른발2
     ]
-    RECTS = [(round(x * CHAR_W / _VW), round(y * CHAR_H / _VH),
-              max(1, round(w * CHAR_W / _VW)), max(1, round(h * CHAR_H / _VH)), c)
-             for x, y, w, h, c in _RAW]
 
     # ──────────────────────────────────────────────────────────────────────
 
