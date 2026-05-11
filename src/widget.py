@@ -343,15 +343,34 @@ def run_widget(sw: int, sh: int):
 
         # ── 이벤트 폴링 ────────────────────────────────────────────────────
 
+        def _make_conn(self):
+            import http.client
+            c = http.client.HTTPConnection("127.0.0.1", PORT, timeout=1)
+            return c
+
         def _poll(self):
-            import urllib.request, json
+            import json
             try:
-                r = urllib.request.urlopen(
-                    f"http://127.0.0.1:{PORT}/pull", timeout=0.5)
-                for ev in json.loads(r.read()).get("events", []):
+                if not hasattr(self, "_conn") or self._conn is None:
+                    self._conn = self._make_conn()
+                try:
+                    self._conn.request("GET", "/pull")
+                    r = self._conn.getresponse()
+                    data = r.read()
+                except Exception:
+                    # 연결이 끊겼으면 새로 만들어서 재시도
+                    try: self._conn.close()
+                    except Exception: pass
+                    self._conn = self._make_conn()
+                    self._conn.request("GET", "/pull")
+                    r = self._conn.getresponse()
+                    data = r.read()
+                for ev in json.loads(data).get("events", []):
                     self.trigger(ev["event"], ev.get("message", ""))
             except Exception:
-                pass
+                try: self._conn.close()
+                except Exception: pass
+                self._conn = None
 
         # ── DWM 그림자/모서리 제거 ────────────────────────────────────────────
 
