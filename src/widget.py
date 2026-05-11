@@ -215,7 +215,8 @@ def run_widget(sw: int, sh: int):
     from PyQt6.QtWidgets import QApplication, QWidget
     from PyQt6.QtCore import Qt, QTimer, QPoint, QRectF, QPointF
     from PyQt6.QtGui import (QColor, QPainter, QPainterPath, QBrush, QPen,
-                              QFont, QFontMetrics, QGuiApplication, QPolygonF)
+                              QFont, QFontDatabase, QFontMetrics,
+                              QGuiApplication, QPolygonF)
 
     # ── 물리 상수 ──────────────────────────────────────────────────────────
     GRAVITY           = 0.0018   # px/ms²
@@ -262,6 +263,15 @@ def run_widget(sw: int, sh: int):
 
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
+
+    # ── 커스텀 폰트 로드 ──────────────────────────────────────────────────
+    _base = (sys._MEIPASS if getattr(sys, "frozen", False)
+             else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    _font_path = os.path.join(_base, "assets", "fonts", "text",
+                              "SF-Pro-Text-Medium.otf")
+    _fid = QFontDatabase.addApplicationFont(_font_path)
+    _families = QFontDatabase.applicationFontFamilies(_fid) if _fid >= 0 else []
+    SPEECH_FONT_FAMILY = _families[0] if _families else "Segoe UI"
 
     screen = QGuiApplication.primaryScreen()
     if screen:
@@ -446,7 +456,7 @@ def run_widget(sw: int, sh: int):
 
         def _draw_speech(self, p: QPainter):
             a    = self._speech_a
-            font = QFont("Segoe UI", 9, QFont.Weight.Medium)
+            font = QFont(SPEECH_FONT_FAMILY, 9)
             p.setFont(font)
             fm   = QFontMetrics(font)
             tw   = fm.horizontalAdvance(self._speech)

@@ -11,7 +11,7 @@ a = Analysis(
     ['src/widget.py'],
     pathex=[str(Path('.').resolve())],
     binaries=[],
-    datas=[],
+    datas=[('assets/fonts', 'assets/fonts')],
     hiddenimports=[
         'PyQt6.QtWebEngineWidgets',
         'PyQt6.QtWebEngineCore',
