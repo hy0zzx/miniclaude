@@ -346,6 +346,19 @@ def run_widget(sw: int, sh: int):
                         self._atimer.stop()
             self.update()
 
+        def greet(self):
+            """시작 시 한 번만 재생되는 인사 — 클릭 불필요, 2.5초 후 자동 소멸."""
+            self._speech   = "안녕! Claude 응답 오면 알려줄게 :)"
+            self._speech_a = 255
+            self._start_bounce()
+            self.update()
+            QTimer.singleShot(2500, self._hide_greeting)
+
+        def _hide_greeting(self):
+            if not self._waiting_for_click:   # 그 사이 실제 알림이 안 왔으면
+                self._speech_a = 0
+                self.update()
+
         def trigger(self, event: str, message: str = ""):
             text = message or ("응답 도착!" if event == "Stop" else "확인 필요!")
             self._speech          = text
@@ -530,6 +543,7 @@ def run_widget(sw: int, sh: int):
 
     widget = HopWidget()
     widget.show()
+    QTimer.singleShot(400, widget.greet)   # 창 뜨고 0.4초 후 인사
     sys.exit(app.exec())
 
 
