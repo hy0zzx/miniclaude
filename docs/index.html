@@ -21,7 +21,6 @@
       --text:   #1A1A1A;
       --muted:  #6B6560;
       --border: #D8D4CE;
-      --card:   #FFFFFF;
     }
 
     html { scroll-behavior: smooth; }
@@ -33,12 +32,16 @@
       line-height: 1.6;
     }
 
-    /* ── NAV ───────────────────────────────── */
+    /* ── i18n ─────────────────────────────────────────────────────────────── */
+    html:not(.en) .en { display: none; }
+    html.en .ko { display: none; }
+
+    /* ── NAV ──────────────────────────────────────────────────────────────── */
     nav {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(251,250,248,0.88);
+      background: rgba(251,250,248,0.9);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
@@ -59,23 +62,30 @@
       text-decoration: none;
     }
 
-    .nav-github {
+    .lang-toggle {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 2px;
       font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
-      text-decoration: none;
-      padding: 6px 12px;
+      font-weight: 600;
+      font-family: inherit;
+      background: transparent;
+      border: 1.5px solid var(--border);
       border-radius: 8px;
-      border: 1px solid var(--border);
-      transition: background 0.15s, color 0.15s;
+      padding: 5px 12px;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.15s;
     }
 
-    .nav-github:hover { background: #F0EDEA; color: var(--text); }
+    .lang-toggle:hover { background: #F0EDEA; }
 
-    /* ── HERO ──────────────────────────────── */
+    .lang-toggle .sep { margin: 0 4px; color: var(--border); }
+
+    html:not(.en) .lang-toggle .t-en { opacity: 0.38; }
+    html.en        .lang-toggle .t-ko { opacity: 0.38; }
+
+    /* ── HERO ─────────────────────────────────────────────────────────────── */
     .hero {
       max-width: 720px;
       margin: 0 auto;
@@ -83,45 +93,30 @@
       text-align: center;
     }
 
-    .hero-char-wrap {
+    .hero-stage {
       display: inline-block;
-      margin-bottom: 40px;
+      margin-bottom: 36px;
       position: relative;
     }
 
-    .hero-char {
+    /* JS controls transforms directly — no CSS animation */
+    #heroChar {
       display: block;
-      animation: hop 1.4s cubic-bezier(.25,.46,.45,.94) infinite;
-      filter: drop-shadow(0 10px 18px rgba(218,119,87,0.22));
+      filter: drop-shadow(0 8px 16px rgba(218,119,87,0.2));
     }
 
-    .hero-shadow {
+    #heroShadow {
       display: block;
-      width: 54px;
-      height: 8px;
-      background: rgba(0,0,0,0.12);
+      width: 108px;   /* 2× of widget's 54px ground shadow */
+      height: 9px;
+      background: rgba(0,0,0,0.13);
       border-radius: 50%;
       margin: 4px auto 0;
-      animation: shadow-pulse 1.4s cubic-bezier(.25,.46,.45,.94) infinite;
-    }
-
-    @keyframes hop {
-      0%,100% { transform: translateY(0);      }
-      35%      { transform: translateY(-32px);  }
-      55%      { transform: translateY(-18px);  }
-      75%      { transform: translateY(-6px);   }
-      90%      { transform: translateY(0);      }
-    }
-
-    @keyframes shadow-pulse {
-      0%,100% { transform: scaleX(1);   opacity: .45; }
-      35%      { transform: scaleX(.5);  opacity: .18; }
-      55%      { transform: scaleX(.7);  opacity: .27; }
-      75%      { transform: scaleX(.9);  opacity: .38; }
+      transform-origin: center center;
     }
 
     .hero h1 {
-      font-size: clamp(38px, 7vw, 60px);
+      font-size: clamp(36px, 6.5vw, 56px);
       font-weight: 800;
       letter-spacing: -0.03em;
       line-height: 1.1;
@@ -130,10 +125,10 @@
 
     .hero h1 em { font-style: normal; color: var(--coral); }
 
-    .hero p {
+    .hero > p {
       font-size: clamp(15px, 2.5vw, 17px);
       color: var(--muted);
-      max-width: 420px;
+      max-width: 440px;
       margin: 0 auto 40px;
     }
 
@@ -157,14 +152,11 @@
       font-family: inherit;
       border-radius: 12px;
       text-decoration: none;
-      box-shadow: 0 4px 18px rgba(218,119,87,.32);
+      box-shadow: 0 4px 18px rgba(218,119,87,.3);
       transition: transform .15s, box-shadow .15s;
     }
 
-    .btn-dl:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 28px rgba(218,119,87,.42);
-    }
+    .btn-dl:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(218,119,87,.42); }
 
     .btn-ghost {
       display: inline-flex;
@@ -189,8 +181,6 @@
       justify-content: center;
       align-items: center;
       gap: 6px;
-      font-size: 12px;
-      color: var(--muted);
       flex-wrap: wrap;
     }
 
@@ -201,16 +191,16 @@
       background: white;
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 3px 10px;
+      padding: 4px 11px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
     }
 
-    /* ── SECTION COMMON ──────────────────── */
+    /* ── SECTION COMMON ───────────────────────────────────────────────────── */
     section { padding: 80px 24px; }
 
-    .inner {
-      max-width: 900px;
-      margin: 0 auto;
-    }
+    .inner { max-width: 900px; margin: 0 auto; }
 
     .sec-eyebrow {
       font-size: 11px;
@@ -228,8 +218,12 @@
       margin-bottom: 48px;
     }
 
-    /* ── STATES ─────────────────────────── */
-    .states { background: white; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    /* ── STATES ───────────────────────────────────────────────────────────── */
+    .states {
+      background: white;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
 
     .states-grid {
       display: grid;
@@ -249,8 +243,9 @@
 
     .state-char-wrap {
       display: inline-block;
-      margin-bottom: 12px;
       position: relative;
+      margin-top: 36px;
+      margin-bottom: 12px;
     }
 
     .state-bubble {
@@ -290,22 +285,13 @@
       margin-bottom: 10px;
     }
 
-    .state-name {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
+    .state-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .state-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
-    .state-desc {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    /* ── FEATURES ───────────────────────── */
+    /* ── FEATURES ─────────────────────────────────────────────────────────── */
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 16px;
     }
 
@@ -331,59 +317,79 @@
     .feat-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
     .feat-card p  { font-size: 13px; color: var(--muted); line-height: 1.55; }
 
-    /* ── CTA ────────────────────────────── */
-    .cta {
-      background: var(--text);
-      color: white;
+    /* ── INSTALL ──────────────────────────────────────────────────────────── */
+    .install {
+      background: white;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
+
+    .install-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .step { display: flex; gap: 16px; align-items: flex-start; }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      background: var(--coral);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .step h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .step p  { font-size: 13px; color: var(--muted); }
+
+    /* ── CTA ──────────────────────────────────────────────────────────────── */
+    .cta { background: var(--text); color: white; }
 
     .cta .inner { text-align: center; }
+    .cta .sec-eyebrow { color: rgba(218,119,87,.85); }
+    .cta .sec-title { color: white; margin-bottom: 12px; }
 
-    .cta .sec-eyebrow { color: rgba(218,119,87,.9); }
-    .cta .sec-title   { color: white; margin-bottom: 12px; }
+    .cta-sub { font-size: 15px; color: rgba(255,255,255,.55); margin-bottom: 36px; }
 
-    .cta-sub {
-      font-size: 15px;
-      color: rgba(255,255,255,.55);
-      margin-bottom: 36px;
-    }
+    .cta .btn-dl { font-size: 16px; padding: 16px 36px; }
 
-    .cta .btn-dl {
-      font-size: 16px;
-      padding: 16px 36px;
-    }
+    .cta-note { margin-top: 18px; font-size: 12px; color: rgba(255,255,255,.3); }
+    .cta-note a { color: rgba(255,255,255,.35); text-decoration: underline; }
 
-    .cta-note {
-      margin-top: 18px;
-      font-size: 12px;
-      color: rgba(255,255,255,.3);
-    }
-
-    /* ── FOOTER ─────────────────────────── */
+    /* ── FOOTER ───────────────────────────────────────────────────────────── */
     footer {
       border-top: 1px solid var(--border);
       padding: 28px 24px;
       text-align: center;
       font-size: 13px;
       color: var(--muted);
+    }
+
+    footer .foot-row {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
     footer a { color: var(--muted); text-decoration: none; }
     footer a:hover { color: var(--text); }
-    footer .foot-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
   </style>
 </head>
 <body>
 
-<!-- ══ NAV ══════════════════════════════════════════════════════════════════ -->
+<!-- ── NAV ─────────────────────────────────────────────────────────────────── -->
 <nav>
   <a href="#" class="nav-logo">
-    <!-- 1× pixel art character (86×54) -->
-    <svg width="43" height="27" viewBox="0 0 86 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="43" height="27" viewBox="0 0 86 54" fill="none">
       <rect x="11" y="0"  width="65" height="11" fill="#DA7757"/>
       <rect x="11" y="11" width="11" height="11" fill="#DA7757"/>
       <rect x="22" y="11" width="5"  height="11" fill="#FFFFFF"/>
@@ -399,25 +405,18 @@
     </svg>
     HopClaude
   </a>
-  <a href="https://github.com/hy0zzx/miniclaude" class="nav-github" target="_blank" rel="noopener">
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
-               0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
-               -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
-               .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
-               -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.67 7.67 0 0 1 2-.27
-               c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
-               .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
-               0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
-    </svg>
-    GitHub
-  </a>
+
+  <button class="lang-toggle" id="langToggle" aria-label="Toggle language">
+    <span class="t-ko">한국어</span>
+    <span class="sep">·</span>
+    <span class="t-en">English</span>
+  </button>
 </nav>
 
-<!-- ══ HERO ═════════════════════════════════════════════════════════════════ -->
+<!-- ── HERO ────────────────────────────────────────────────────────────────── -->
 <div class="hero">
-  <div class="hero-char-wrap">
-    <svg class="hero-char" width="172" height="108" viewBox="0 0 86 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <div class="hero-stage">
+    <svg id="heroChar" width="172" height="108" viewBox="0 0 86 54" fill="none">
       <rect x="11" y="0"  width="65" height="11" fill="#DA7757"/>
       <rect x="11" y="11" width="11" height="11" fill="#DA7757"/>
       <rect x="22" y="11" width="5"  height="11" fill="#FFFFFF"/>
@@ -431,69 +430,66 @@
       <rect x="54" y="43" width="5"  height="11" fill="#DA7757"/>
       <rect x="64" y="43" width="6"  height="11" fill="#DA7757"/>
     </svg>
-    <div class="hero-shadow"></div>
+    <div id="heroShadow"></div>
   </div>
 
-  <h1>Claude Code가 응답하면<br /><em>뛰어오르며</em> 알려줘요</h1>
-  <p>응답 완료·권한 확인 알림을 귀여운 픽셀 캐릭터가 점프와 말풍선으로 전달하는 데스크톱 위젯</p>
+  <h1>
+    <span class="ko">Claude Code가 응답하면<br /><em>뛰어오르며</em> 알려줘요</span>
+    <span class="en">Know the moment<br />Claude Code <em>responds</em></span>
+  </h1>
+
+  <p class="ko">응답 완료·권한 확인 알림을 귀여운 픽셀 캐릭터가 점프와 말풍선으로 전달하는 데스크톱 위젯</p>
+  <p class="en">A desktop widget that notifies you through a bouncing pixel character when Claude Code finishes a task or needs your input</p>
 
   <div class="btn-row">
-    <a href="https://github.com/hy0zzx/miniclaude/releases/latest/download/HopClaude-Setup-1.0.0-win.exe"
-       class="btn-dl">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M8 12L2.5 6.5 3.91 5.09 7 8.17V1h2v7.17l3.09-3.08L13.5 6.5z"/>
+    <a href="https://github.com/hy0zzx/miniclaude/releases/latest/download/HopClaude-Setup-1.0.0-win.exe" class="btn-dl">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M7.5 11.5L2 6l1.41-1.41L7 8.17V1h2v7.17l3.59-3.58L14 6l-5.5 5.5-.5.5-.5-.5z"/>
         <rect x="2" y="13" width="12" height="2"/>
       </svg>
-      Windows 다운로드
+      <span class="ko">Windows 다운로드</span>
+      <span class="en">Download for Windows</span>
     </a>
     <a href="https://github.com/hy0zzx/miniclaude" class="btn-ghost" target="_blank" rel="noopener">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
-                 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
-                 -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
-                 .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
-                 -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.67 7.67 0 0 1 2-.27
-                 c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
-                 .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
-                 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.67 7.67 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
       </svg>
-      GitHub에서 보기
+      <span class="ko">GitHub에서 보기</span>
+      <span class="en">View on GitHub</span>
     </a>
   </div>
 
   <div class="hero-badges">
     <span class="badge">
-      <svg width="12" height="12" viewBox="0 0 16 16" fill="#DA7757">
-        <path d="M1 3h14v2H1zM1 7h14v2H1zM1 11h8v2H1z"/>
-      </svg>
-      Windows 지원
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="#DA7757"><rect x="1" y="1" width="14" height="3"/><rect x="1" y="6" width="14" height="3"/><rect x="1" y="11" width="9" height="3"/></svg>
+      <span class="ko">Windows 지원</span><span class="en">Windows</span>
     </span>
     <span class="badge">
-      <svg width="12" height="12" viewBox="0 0 16 16" fill="#40BA83">
-        <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm3.7 5.7l-4 4a1 1 0 0 1-1.4 0l-2-2a1 1 0 1 1 1.4-1.4L7 8.59l3.3-3.3a1 1 0 0 1 1.4 1.41z"/>
-      </svg>
-      무료 · 오픈소스
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="#40BA83"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm3.7 5.7l-4 4a1 1 0 0 1-1.4 0l-2-2a1 1 0 1 1 1.4-1.4L7 8.59l3.3-3.3a1 1 0 0 1 1.4 1.41z"/></svg>
+      <span class="ko">무료 · 오픈소스</span><span class="en">Free & open source</span>
     </span>
     <span class="badge">
-      <svg width="12" height="12" viewBox="0 0 16 16" fill="#6B6560">
-        <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM7 4h2v5H7zm0 6h2v2H7z"/>
-      </svg>
-      Claude Code 훅 자동 등록
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="#6B6560"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM7 4h2v5H7zm0 6h2v2H7z"/></svg>
+      <span class="ko">Claude Code 훅 자동 등록</span><span class="en">Auto-registers Claude Code hooks</span>
     </span>
   </div>
 </div>
 
-<!-- ══ STATES ════════════════════════════════════════════════════════════════ -->
+<!-- ── STATES ───────────────────────────────────────────────────────────────── -->
 <section class="states">
   <div class="inner">
-    <p class="sec-eyebrow">동작 방식</p>
-    <h2 class="sec-title">상태에 따라 캐릭터가 변해요</h2>
+    <p class="sec-eyebrow">
+      <span class="ko">동작 방식</span><span class="en">How it works</span>
+    </p>
+    <h2 class="sec-title">
+      <span class="ko">상태에 따라 캐릭터가 변해요</span>
+      <span class="en">Character changes with each state</span>
+    </h2>
 
     <div class="states-grid">
 
-      <!-- 대기 중 -->
       <div class="state-card">
-        <div class="state-char-wrap" style="margin-top:38px;">
+        <div class="state-char-wrap">
           <svg width="86" height="54" viewBox="0 0 86 54" fill="none">
             <rect x="11" y="0"  width="65" height="11" fill="#DA7757"/>
             <rect x="11" y="11" width="11" height="11" fill="#DA7757"/>
@@ -509,15 +505,19 @@
             <rect x="64" y="43" width="6"  height="11" fill="#DA7757"/>
           </svg>
         </div>
-        <span class="state-label" style="background:#FEF0EB;color:#DA7757;">대기 중</span>
-        <p class="state-name">코랄 캐릭터</p>
-        <p class="state-desc">Claude Code가 작업 중일 때의 기본 상태예요</p>
+        <span class="state-label" style="background:#FEF0EB;color:#DA7757;">
+          <span class="ko">대기 중</span><span class="en">Idle</span>
+        </span>
+        <p class="state-name ko">코랄 캐릭터</p>
+        <p class="state-name en">Coral character</p>
+        <p class="state-desc ko">Claude Code가 작업 중일 때의 기본 상태예요</p>
+        <p class="state-desc en">Default state while Claude Code is working</p>
       </div>
 
-      <!-- 응답 완료 -->
       <div class="state-card">
-        <div class="state-char-wrap" style="margin-top:38px;">
-          <span class="state-bubble">응답 도착!</span>
+        <div class="state-char-wrap">
+          <span class="state-bubble ko">응답 도착!</span>
+          <span class="state-bubble en">Done!</span>
           <svg width="86" height="54" viewBox="0 0 86 54" fill="none">
             <rect x="11" y="0"  width="65" height="11" fill="#40BA83"/>
             <rect x="11" y="11" width="11" height="11" fill="#40BA83"/>
@@ -533,15 +533,19 @@
             <rect x="64" y="43" width="6"  height="11" fill="#40BA83"/>
           </svg>
         </div>
-        <span class="state-label" style="background:#E8F8F1;color:#40BA83;">응답 완료</span>
-        <p class="state-name">초록 캐릭터 + 점프</p>
-        <p class="state-desc">Claude Code 작업이 끝나면 캐릭터가 초록으로 바뀌며 뛰어올라요</p>
+        <span class="state-label" style="background:#E8F8F1;color:#40BA83;">
+          <span class="ko">응답 완료</span><span class="en">Done</span>
+        </span>
+        <p class="state-name ko">초록 캐릭터 + 점프</p>
+        <p class="state-name en">Green + bounce</p>
+        <p class="state-desc ko">작업이 끝나면 초록으로 바뀌며 뛰어올라요</p>
+        <p class="state-desc en">Character turns green and bounces when Claude finishes</p>
       </div>
 
-      <!-- 확인 필요 -->
       <div class="state-card">
-        <div class="state-char-wrap" style="margin-top:38px;">
-          <span class="state-bubble">확인 필요!</span>
+        <div class="state-char-wrap">
+          <span class="state-bubble ko">확인 필요!</span>
+          <span class="state-bubble en">Check needed!</span>
           <svg width="86" height="54" viewBox="0 0 86 54" fill="none">
             <rect x="11" y="0"  width="65" height="11" fill="#E8933A"/>
             <rect x="11" y="11" width="11" height="11" fill="#E8933A"/>
@@ -557,133 +561,153 @@
             <rect x="64" y="43" width="6"  height="11" fill="#E8933A"/>
           </svg>
         </div>
-        <span class="state-label" style="background:#FEF4E8;color:#E8933A;">확인 필요</span>
-        <p class="state-name">주황 캐릭터 + 점프</p>
-        <p class="state-desc">권한 확인이나 입력이 필요할 때 주황색으로 알려줘요</p>
+        <span class="state-label" style="background:#FEF4E8;color:#E8933A;">
+          <span class="ko">확인 필요</span><span class="en">Action needed</span>
+        </span>
+        <p class="state-name ko">주황 캐릭터 + 점프</p>
+        <p class="state-name en">Orange + bounce</p>
+        <p class="state-desc ko">권한 확인이나 입력이 필요할 때 주황색으로 알려줘요</p>
+        <p class="state-desc en">Turns orange when Claude needs permission or input</p>
       </div>
 
     </div>
   </div>
 </section>
 
-<!-- ══ FEATURES ══════════════════════════════════════════════════════════════ -->
+<!-- ── FEATURES ─────────────────────────────────────────────────────────────── -->
 <section>
   <div class="inner">
-    <p class="sec-eyebrow">주요 기능</p>
-    <h2 class="sec-title">Claude Code를 더 편하게</h2>
+    <p class="sec-eyebrow">
+      <span class="ko">주요 기능</span><span class="en">Features</span>
+    </p>
+    <h2 class="sec-title">
+      <span class="ko">Claude Code를 더 편하게</span>
+      <span class="en">Work more comfortably with Claude Code</span>
+    </h2>
 
     <div class="features-grid">
 
       <div class="feat-card">
         <div class="feat-icon">🔔</div>
-        <h3>즉각적인 알림</h3>
-        <p>Claude Code 응답 완료 또는 권한 확인 요청이 오는 순간 캐릭터가 점프하며 말풍선으로 알려줘요. 다른 창을 보고 있어도 놓치지 않아요.</p>
+        <h3><span class="ko">즉각적인 알림</span><span class="en">Instant alerts</span></h3>
+        <p class="ko">Claude Code 응답 완료 또는 권한 확인 요청이 오는 순간 캐릭터가 점프하며 말풍선으로 알려줘요. 다른 창을 보고 있어도 놓치지 않아요.</p>
+        <p class="en">The moment Claude Code finishes or needs input, the character jumps with a speech bubble. Never miss a response even while in another window.</p>
       </div>
 
       <div class="feat-card">
         <div class="feat-icon">📊</div>
-        <h3>사용량 대시보드</h3>
-        <p>캐릭터를 클릭하면 현재 세션 사용량과 이번 주 Claude 모델별 토큰 사용량을 한눈에 확인할 수 있어요. 5분마다 자동 갱신됩니다.</p>
+        <h3><span class="ko">사용량 대시보드</span><span class="en">Usage dashboard</span></h3>
+        <p class="ko">캐릭터를 클릭하면 현재 세션 사용량과 이번 주 Claude 모델별 토큰 사용량을 한눈에 확인할 수 있어요. 5분마다 자동 갱신됩니다.</p>
+        <p class="en">Click the character to view current session usage and this week's token usage by model. Auto-refreshes every 5 minutes.</p>
       </div>
 
       <div class="feat-card">
         <div class="feat-icon">🖱️</div>
-        <h3>자유로운 배치</h3>
-        <p>위젯을 드래그해서 모니터 어디에든 배치할 수 있어요. 자리를 옮기면 대시보드도 따라와요.</p>
+        <h3><span class="ko">자유로운 배치</span><span class="en">Place anywhere</span></h3>
+        <p class="ko">위젯을 드래그해서 모니터 어디에든 배치할 수 있어요. 자리를 옮기면 대시보드도 따라와요.</p>
+        <p class="en">Drag the widget to any position on your monitor. The dashboard follows along when you move it.</p>
       </div>
 
       <div class="feat-card">
         <div class="feat-icon">👻</div>
-        <h3>잠깐 숨기기</h3>
-        <p>캐릭터를 클릭하면 5초간 반투명으로 사라져요. 화면이 복잡할 때 잠깐 비켜달라고 할 수 있어요.</p>
+        <h3><span class="ko">잠깐 숨기기</span><span class="en">Quick hide</span></h3>
+        <p class="ko">캐릭터를 클릭하면 5초간 반투명으로 사라져요. 화면이 복잡할 때 잠깐 비켜달라고 할 수 있어요.</p>
+        <p class="en">Click the character to make it fade out for 5 seconds. Handy when your screen gets busy.</p>
       </div>
 
       <div class="feat-card">
         <div class="feat-icon">⚡</div>
-        <h3>자동 시작 & 훅 등록</h3>
-        <p>설치 시 Windows 시작 프로그램과 Claude Code 훅이 자동으로 등록돼요. 설정 없이 바로 쓸 수 있어요.</p>
+        <h3><span class="ko">자동 시작 &amp; 훅 등록</span><span class="en">Auto-start &amp; hooks</span></h3>
+        <p class="ko">설치 시 Windows 시작 프로그램과 Claude Code 훅이 자동으로 등록돼요. 설정 없이 바로 쓸 수 있어요.</p>
+        <p class="en">Startup registration and Claude Code hooks are auto-configured at install time. Zero manual setup needed.</p>
       </div>
 
       <div class="feat-card">
         <div class="feat-icon">🕐</div>
-        <h3>시간대별 인사</h3>
-        <p>아침·점심·저녁·새벽 각각 다른 메시지로 인사해줘요. 오래 작업하는 날도 조금 더 즐겁게.</p>
+        <h3><span class="ko">시간대별 인사</span><span class="en">Time-based greetings</span></h3>
+        <p class="ko">아침·점심·저녁·새벽 각각 다른 메시지로 인사해줘요. 오래 작업하는 날도 조금 더 즐겁게.</p>
+        <p class="en">Different messages for morning, afternoon, evening, and late night. A small touch that makes long sessions more enjoyable.</p>
       </div>
 
     </div>
   </div>
 </section>
 
-<!-- ══ HOW TO INSTALL ════════════════════════════════════════════════════════ -->
-<section style="background:white;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+<!-- ── INSTALL ───────────────────────────────────────────────────────────────── -->
+<section class="install">
   <div class="inner">
-    <p class="sec-eyebrow">설치 방법</p>
-    <h2 class="sec-title">설치는 30초면 충분해요</h2>
+    <p class="sec-eyebrow">
+      <span class="ko">설치 방법</span><span class="en">Installation</span>
+    </p>
+    <h2 class="sec-title">
+      <span class="ko">설치는 30초면 충분해요</span>
+      <span class="en">Up and running in 30 seconds</span>
+    </h2>
 
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
-
-      <div style="display:flex;gap:16px;align-items:flex-start;">
-        <div style="width:32px;height:32px;min-width:32px;background:var(--coral);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">1</div>
+    <div class="install-steps">
+      <div class="step">
+        <div class="step-num">1</div>
         <div>
-          <p style="font-weight:600;font-size:14px;margin-bottom:4px;">인스톨러 실행</p>
-          <p style="font-size:13px;color:var(--muted);">HopClaude-Setup-1.0.0-win.exe를 다운로드해서 실행하세요</p>
+          <h3><span class="ko">인스톨러 실행</span><span class="en">Run the installer</span></h3>
+          <p class="ko">HopClaude-Setup-1.0.0-win.exe를 다운로드해서 실행하세요</p>
+          <p class="en">Download and run HopClaude-Setup-1.0.0-win.exe</p>
         </div>
       </div>
-
-      <div style="display:flex;gap:16px;align-items:flex-start;">
-        <div style="width:32px;height:32px;min-width:32px;background:var(--coral);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">2</div>
+      <div class="step">
+        <div class="step-num">2</div>
         <div>
-          <p style="font-weight:600;font-size:14px;margin-bottom:4px;">자동 시작 체크</p>
-          <p style="font-size:13px;color:var(--muted);">설치 중 "Windows 시작 시 자동 실행" 체크 유지를 권장해요</p>
+          <h3><span class="ko">자동 시작 체크</span><span class="en">Enable auto-start</span></h3>
+          <p class="ko">설치 중 "Windows 시작 시 자동 실행" 체크 유지를 권장해요</p>
+          <p class="en">Keep "Run on Windows startup" checked (recommended)</p>
         </div>
       </div>
-
-      <div style="display:flex;gap:16px;align-items:flex-start;">
-        <div style="width:32px;height:32px;min-width:32px;background:var(--coral);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">3</div>
+      <div class="step">
+        <div class="step-num">3</div>
         <div>
-          <p style="font-weight:600;font-size:14px;margin-bottom:4px;">완료!</p>
-          <p style="font-size:13px;color:var(--muted);">위젯이 바로 실행되고 Claude Code 훅도 자동 등록돼요</p>
+          <h3><span class="ko">완료!</span><span class="en">Done!</span></h3>
+          <p class="ko">위젯이 바로 실행되고 Claude Code 훅도 자동 등록돼요</p>
+          <p class="en">The widget launches and Claude Code hooks are registered automatically</p>
         </div>
       </div>
-
     </div>
   </div>
 </section>
 
-<!-- ══ CTA ════════════════════════════════════════════════════════════════════ -->
+<!-- ── CTA ──────────────────────────────────────────────────────────────────── -->
 <section class="cta">
   <div class="inner">
-    <p class="sec-eyebrow">무료 다운로드</p>
-    <h2 class="sec-title">지금 바로 시작해보세요</h2>
-    <p class="cta-sub">Windows · 설치 파일 크기 약 30 MB</p>
-    <a href="https://github.com/hy0zzx/miniclaude/releases/latest/download/HopClaude-Setup-1.0.0-win.exe"
-       class="btn-dl">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M8 12L2.5 6.5 3.91 5.09 7 8.17V1h2v7.17l3.09-3.08L13.5 6.5z"/>
+    <p class="sec-eyebrow">
+      <span class="ko">무료 다운로드</span><span class="en">Free Download</span>
+    </p>
+    <h2 class="sec-title">
+      <span class="ko">지금 바로 시작해보세요</span>
+      <span class="en">Get started now</span>
+    </h2>
+    <p class="cta-sub ko">Windows · 설치 파일 크기 약 30 MB</p>
+    <p class="cta-sub en">Windows · Setup file ~30 MB</p>
+    <a href="https://github.com/hy0zzx/miniclaude/releases/latest/download/HopClaude-Setup-1.0.0-win.exe" class="btn-dl">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M7.5 11.5L2 6l1.41-1.41L7 8.17V1h2v7.17l3.59-3.58L14 6l-5.5 5.5-.5.5-.5-.5z"/>
         <rect x="2" y="13" width="12" height="2"/>
       </svg>
-      HopClaude 다운로드 — v1.0.0
+      <span class="ko">HopClaude 다운로드 — v1.0.0</span>
+      <span class="en">Download HopClaude — v1.0.0</span>
     </a>
     <p class="cta-note">
-      <a href="https://github.com/hy0zzx/miniclaude/releases" style="color:rgba(255,255,255,.35);text-decoration:underline;">모든 버전 보기</a>
+      <a href="https://github.com/hy0zzx/miniclaude/releases">
+        <span class="ko">모든 버전 보기</span><span class="en">All releases</span>
+      </a>
       &nbsp;·&nbsp; MIT License
     </p>
   </div>
 </section>
 
-<!-- ══ FOOTER ════════════════════════════════════════════════════════════════ -->
+<!-- ── FOOTER ───────────────────────────────────────────────────────────────── -->
 <footer>
   <div class="foot-row">
     <a href="https://github.com/hy0zzx/miniclaude" target="_blank" rel="noopener">
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:middle;margin-right:4px;">
-        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
-                 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
-                 -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
-                 .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
-                 -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.67 7.67 0 0 1 2-.27
-                 c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
-                 .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
-                 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:middle;margin-right:4px;">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.67 7.67 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
       </svg>
       hy0zzx/miniclaude
     </a>
@@ -693,6 +717,68 @@
     <span>Made with Claude Code</span>
   </div>
 </footer>
+
+<script>
+  /* ── Language toggle ─────────────────────────────────────────────────── */
+  document.getElementById('langToggle').addEventListener('click', function () {
+    document.documentElement.classList.toggle('en');
+  });
+
+  /* ── Physics animation (matches widget.py exactly) ───────────────────── */
+  var char   = document.getElementById('heroChar');
+  var shadow = document.getElementById('heroShadow');
+
+  var GRAVITY         = 0.0018;   // px/ms²  — same as widget
+  var R_BIG           = 0.82;     // restitution for bounces 1-2
+  var R_SMALL         = 0.52;     // restitution for bounce 3+
+  var MIN_V           = 0.12;     // px/ms — stop threshold
+  var MAX_H           = 44.0;     // px — widget pixels
+  var DISPLAY_SCALE   = 2;        // SVG rendered at 2× widget pixels
+
+  var vy      = Math.sqrt(2 * GRAVITY * MAX_H);  // initial upward velocity
+  var y       = 0.0;
+  var bounces = 0;
+  var last    = null;
+
+  function step(ts) {
+    if (last === null) { last = ts; requestAnimationFrame(step); return; }
+
+    var dt = Math.min(ts - last, 20);  // cap at 20ms (same as widget)
+    last = ts;
+
+    vy -= GRAVITY * dt;
+    y  += vy * dt;
+
+    if (y <= 0) {
+      y = 0.0;
+      bounces++;
+      var r = bounces <= 2 ? R_BIG : R_SMALL;
+      vy = Math.abs(vy) * r;
+      if (vy < MIN_V) {
+        /* restart cycle — mirrors the waiting_for_click loop in widget */
+        vy      = Math.sqrt(2 * GRAVITY * MAX_H);
+        y       = 0.0;
+        bounces = 0;
+      }
+    }
+
+    /* translateY is negative because CSS y-axis points down */
+    char.style.transform = 'translateY(' + (-y * DISPLAY_SCALE) + 'px)';
+
+    /* shadow: width and opacity scale with height (same formula as widget) */
+    var ratio  = Math.max(0, 1 - y / MAX_H);
+    /* widget sw_px = 20 + ratio*34, range 20-54px; at 2× → 40-108px → scaleX 0.37-1.0 */
+    var scaleX = (20 + ratio * 34) / 54;
+    var alpha  = 0.05 + ratio * 0.13;  /* range 0.05-0.18 */
+
+    shadow.style.transform = 'scaleX(' + scaleX + ')';
+    shadow.style.opacity   = '' + alpha / 0.18;  /* normalize to 1.0 at ground */
+
+    requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
+</script>
 
 </body>
 </html>
