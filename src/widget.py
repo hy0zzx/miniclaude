@@ -530,6 +530,18 @@ def run_widget(sw: int, sh: int):
             self.sync()
             self._auto.start()
 
+        def reposition(self, ref: QWidget):
+            """데이터 재요청 없이 위치만 갱신."""
+            self.adjustSize()
+            g = ref.frameGeometry()
+            scr = QGuiApplication.primaryScreen().geometry()
+            x = g.left() - self.width() - 8
+            y = g.bottom() - self.height()
+            self.move(
+                max(0, min(x, scr.width() - self.width())),
+                max(0, min(y, scr.height() - self.height() - 40)),
+            )
+
         def hide(self):
             self._auto.stop()
             super().hide()
@@ -833,6 +845,8 @@ def run_widget(sw: int, sh: int):
         def mouseMoveEvent(self, ev):
             if ev.buttons() == Qt.MouseButton.LeftButton:
                 self.move(ev.globalPosition().toPoint() - self._drag_pos)
+                if self._dashboard.isVisible():
+                    self._dashboard.reposition(self)
 
         def mouseReleaseEvent(self, ev):
             if ev.button() == Qt.MouseButton.LeftButton:
