@@ -527,9 +527,9 @@ def run_widget(sw: int, sh: int):
             g = ref.frameGeometry()
             scr = QGuiApplication.primaryScreen().geometry()
             x = g.left() + g.width() // 2 - self.width() // 2
-            # 말풍선과 동일한 기준: 캐릭터 머리 위 10px (CHAR_Y = 창 내 캐릭터 상단 위치)
-            char_screen_top = g.top() + CHAR_Y
-            y = char_screen_top - self.height() - 10
+            # 점프 최고점 기준 — 말풍선이 붙는 위치(CHAR_Y - MAX_H - 10)에서 10px 위
+            jump_top_screen = g.top() + CHAR_Y - int(MAX_H) - 10
+            y = jump_top_screen - self.height() - 10
             return (
                 max(0, min(x, scr.width() - self.width())),
                 max(0, min(y, scr.height() - self.height() - 40)),
