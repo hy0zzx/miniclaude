@@ -218,7 +218,7 @@ def run_widget(sw: int, sh: int):
     from PyQt6.QtWidgets import QApplication, QWidget
     from PyQt6.QtCore import Qt, QTimer, QPoint, QRectF, QPointF
     from PyQt6.QtGui import (QColor, QPainter, QPainterPath, QBrush, QPen,
-                              QFont, QFontDatabase, QFontMetrics,
+                              QFont, QFontDatabase, QFontMetrics, QPixmap,
                               QGuiApplication, QPolygonF)
 
     # ── 물리 상수 ──────────────────────────────────────────────────────────
@@ -263,6 +263,282 @@ def run_widget(sw: int, sh: int):
     ]
 
     # ──────────────────────────────────────────────────────────────────────
+    # 대시보드 서브위젯 ─────────────────────────────────────────────────────
+
+    class _TickBar(QWidget):
+        """세션 진행 바 (0/25/50/75/100 눈금 포함)."""
+        def __init__(self):
+            super().__init__()
+            self._v = 0.0
+            self.setFixedHeight(30)
+        def setValue(self, v): self._v = max(0.0, min(100.0, v)); self.update()
+        def paintEvent(self, _):
+            p = QPainter(self)
+            p.setRenderHint(QPainter.RenderHint.Antialiasing)
+            w, bh, by = self.width(), 6, 0
+            p.setBrush(QBrush(QColor("#E0DDD8"))); p.setPen(Qt.PenStyle.NoPen)
+            p.drawRoundedRect(QRectF(0, by, w, bh), 3, 3)
+            if self._v > 0:
+                p.setBrush(QBrush(QColor("#00875A")))
+                p.drawRoundedRect(QRectF(0, by, w * self._v / 100, bh), 3, 3)
+            font = QFont(SPEECH_FONT_FAMILY, 8); p.setFont(font)
+            p.setPen(QPen(QColor("#AAAAAA")))
+            for t in (0, 25, 50, 75, 100):
+                tx = w * t / 100
+                p.drawText(QRectF(tx - 14, by + bh + 3, 28, 14),
+                           Qt.AlignmentFlag.AlignHCenter, str(t))
+            p.end()
+
+    class _SimpleBar(QWidget):
+        """단순 둥근 진행 바."""
+        def __init__(self):
+            super().__init__()
+            self._v = 0.0
+            self.setFixedHeight(5)
+        def setValue(self, v): self._v = max(0.0, min(100.0, v)); self.update()
+        def paintEvent(self, _):
+            p = QPainter(self)
+            p.setRenderHint(QPainter.RenderHint.Antialiasing)
+            w, h = self.width(), self.height()
+            p.setBrush(QBrush(QColor("#E0DDD8"))); p.setPen(Qt.PenStyle.NoPen)
+            p.drawRoundedRect(QRectF(0, 0, w, h), h / 2, h / 2)
+            if self._v > 0:
+                p.setBrush(QBrush(QColor("#00875A")))
+                p.drawRoundedRect(QRectF(0, 0, w * self._v / 100, h), h / 2, h / 2)
+            p.end()
+
+    class DashboardWindow(QWidget):
+        """클릭 시 표시되는 사용량 대시보드 팝업."""
+
+        def __init__(self):
+            super().__init__()
+            self.setWindowFlags(
+                Qt.WindowType.FramelessWindowHint
+                | Qt.WindowType.WindowStaysOnTopHint
+                | Qt.WindowType.Tool
+            )
+            self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            self.setFixedWidth(290)
+            self._update_q: list = []
+            self._syncing = False
+            self._build_ui()
+
+            self._q_timer = QTimer(self)
+            self._q_timer.setInterval(80)
+            self._q_timer.timeout.connect(self._drain_queue)
+            self._q_timer.start()
+
+            self._auto = QTimer(self)
+            self._auto.setInterval(30_000)
+            self._auto.timeout.connect(self.sync)
+
+        # ── UI 구성 ────────────────────────────────────────────────────────
+
+        def _build_ui(self):
+            from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QLabel,
+                                          QFrame, QGraphicsDropShadowEffect)
+            outer = QVBoxLayout(self)
+            outer.setContentsMargins(10, 10, 10, 10)
+
+            card = QFrame()
+            card.setStyleSheet("QFrame{background:#EDE9E3;border-radius:14px;}")
+            shadow = QGraphicsDropShadowEffect()
+            shadow.setBlurRadius(20); shadow.setOffset(0, 4)
+            shadow.setColor(QColor(0, 0, 0, 60))
+            card.setGraphicsEffect(shadow)
+            outer.addWidget(card)
+
+            lay = QVBoxLayout(card)
+            lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(0)
+
+            # ── 헤더 ──────────────────────────────────────────────────────
+            hdr = QWidget(); hdr.setStyleSheet("background:transparent;")
+            hl = QHBoxLayout(hdr); hl.setContentsMargins(14, 13, 14, 8); hl.setSpacing(6)
+
+            # 픽셀 아이콘
+            px = QPixmap(14, 14); px.fill(Qt.GlobalColor.transparent)
+            pp = QPainter(px); pp.setPen(Qt.PenStyle.NoPen)
+            pp.setBrush(QBrush(CORAL))
+            for rx2, ry2, rw2, rh2 in [(2,0,10,2),(0,2,14,3),(2,5,10,3),(1,8,3,3),(5,8,3,3),(8,8,3,3),(11,8,3,3)]:
+                pp.drawRect(rx2, ry2, rw2, rh2)
+            pp.end()
+            ico = QLabel(); ico.setPixmap(px)
+            hl.addWidget(ico)
+
+            ttl = QLabel("Claude 모니터")
+            ttl.setFont(QFont(SPEECH_FONT_FAMILY, 11, QFont.Weight.Bold))
+            ttl.setStyleSheet("color:#1A1A1A;background:transparent;")
+            hl.addWidget(ttl)
+
+            badge = QLabel("Max")
+            badge.setFont(QFont(SPEECH_FONT_FAMILY, 9, QFont.Weight.Bold))
+            badge.setStyleSheet("background:#DA7757;color:white;border-radius:4px;padding:1px 7px;")
+            hl.addWidget(badge)
+            hl.addStretch()
+            lay.addWidget(hdr)
+
+            def _section():
+                f = QFrame()
+                f.setStyleSheet("QFrame{background:white;border-radius:10px;margin:0 8px 6px 8px;}")
+                return f
+
+            # ── 현재 세션 카드 ─────────────────────────────────────────────
+            sc = _section(); sl = QVBoxLayout(sc)
+            sl.setContentsMargins(12, 10, 12, 12); sl.setSpacing(4)
+            sr = QHBoxLayout()
+            st = QLabel("현재 세션"); st.setFont(QFont(SPEECH_FONT_FAMILY, 11, QFont.Weight.DemiBold))
+            st.setStyleSheet("color:#1A1A1A;background:transparent;")
+            sr.addWidget(st); sr.addStretch()
+            self._sess_pct = QLabel("—%")
+            self._sess_pct.setFont(QFont(SPEECH_FONT_FAMILY, 16, QFont.Weight.Bold))
+            self._sess_pct.setStyleSheet("color:#00875A;background:transparent;")
+            sr.addWidget(self._sess_pct); sl.addLayout(sr)
+            self._sess_bar = _TickBar(); sl.addWidget(self._sess_bar)
+            self._sess_reset = QLabel("불러오는 중...")
+            self._sess_reset.setFont(QFont(SPEECH_FONT_FAMILY, 9))
+            self._sess_reset.setStyleSheet("color:#999;background:transparent;")
+            sl.addWidget(self._sess_reset)
+            lay.addWidget(sc)
+
+            # ── 주간 사용량 카드 ───────────────────────────────────────────
+            wc = _section(); wl = QVBoxLayout(wc)
+            wl.setContentsMargins(12, 10, 12, 12); wl.setSpacing(5)
+            wt = QLabel("주간 사용량"); wt.setFont(QFont(SPEECH_FONT_FAMILY, 11, QFont.Weight.DemiBold))
+            wt.setStyleSheet("color:#1A1A1A;background:transparent;")
+            wl.addWidget(wt)
+
+            def _row(label_text):
+                r = QHBoxLayout()
+                lb = QLabel(label_text); lb.setFont(QFont(SPEECH_FONT_FAMILY, 10))
+                lb.setStyleSheet("color:#555;background:transparent;")
+                r.addWidget(lb); r.addStretch()
+                pct = QLabel("—%"); pct.setFont(QFont(SPEECH_FONT_FAMILY, 10, QFont.Weight.Bold))
+                pct.setStyleSheet("color:#00875A;background:transparent;")
+                r.addWidget(pct)
+                bar = _SimpleBar()
+                return r, pct, bar
+
+            r1, self._all_pct, self._all_bar = _row("전체 모델")
+            wl.addLayout(r1); wl.addWidget(self._all_bar)
+            r2, self._son_pct, self._son_bar = _row("Sonnet 전용")
+            wl.addLayout(r2); wl.addWidget(self._son_bar)
+            lay.addWidget(wc)
+
+            # ── 푸터 ──────────────────────────────────────────────────────
+            ft = QWidget(); ft.setStyleSheet("background:transparent;")
+            fl = QHBoxLayout(ft); fl.setContentsMargins(14, 4, 14, 12); fl.setSpacing(8)
+            self._sync_lbl = QLabel("동기화 안됨")
+            self._sync_lbl.setFont(QFont(SPEECH_FONT_FAMILY, 9))
+            self._sync_lbl.setStyleSheet("color:#AAA;background:transparent;")
+            fl.addWidget(self._sync_lbl); fl.addStretch()
+            for txt, fn in [("동기화", self.sync), ("닫기", self.hide)]:
+                btn = QLabel(txt); btn.setFont(QFont(SPEECH_FONT_FAMILY, 9))
+                btn.setStyleSheet("color:#DA7757;background:transparent;")
+                btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                btn.mousePressEvent = (lambda _f=fn: lambda _: _f())()
+                fl.addWidget(btn)
+            lay.addWidget(ft)
+            self.adjustSize()
+
+        # ── 데이터 ────────────────────────────────────────────────────────
+
+        def sync(self):
+            if self._syncing:
+                return
+            self._syncing = True
+            self._sync_lbl.setText("동기화 중...")
+            import threading
+            threading.Thread(target=self._bg_fetch, daemon=True).start()
+
+        def _bg_fetch(self):
+            try:
+                import urllib.request
+                token = read_access_token()
+                if not token:
+                    self._update_q.append(None); return
+                req = urllib.request.Request(
+                    "https://api.anthropic.com/api/oauth/usage",
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "anthropic-client-type": "claude-code",
+                        "anthropic-version": "2023-06-01",
+                    },
+                )
+                r = urllib.request.urlopen(req, timeout=8)
+                self._update_q.append(json.loads(r.read()))
+            except Exception:
+                self._update_q.append(None)
+
+        def _drain_queue(self):
+            if self._update_q:
+                data = self._update_q.pop(0)
+                self._syncing = False
+                self._apply(data)
+
+        def _apply(self, data):
+            import datetime
+            if data is None:
+                self._sync_lbl.setText("동기화 실패"); return
+
+            def _util(key):
+                obj = data.get(key) or {}
+                return obj.get("utilization") or 0.0
+
+            def _reset_text(key):
+                obj = data.get(key) or {}
+                ra = obj.get("resets_at")
+                if not ra:
+                    return ""
+                try:
+                    dt = datetime.datetime.fromisoformat(ra)
+                    sec = (dt - datetime.datetime.now(datetime.timezone.utc)).total_seconds()
+                    if sec <= 0:   return "곧 초기화"
+                    if sec < 3600: return f"{int(sec/60)}분 후 초기화"
+                    if sec < 86400: return f"{int(sec/3600)}시간 후 초기화"
+                    return f"{int(sec/86400)}일 후 초기화"
+                except Exception:
+                    return ""
+
+            sess = _util("five_hour")
+            self._sess_pct.setText(f"{sess:.0f}%")
+            self._sess_bar.setValue(sess)
+            self._sess_reset.setText(_reset_text("five_hour"))
+
+            all_u = _util("seven_day")
+            self._all_pct.setText(f"{all_u:.0f}%")
+            self._all_bar.setValue(all_u)
+
+            son_u = _util("seven_day_sonnet")
+            self._son_pct.setText(f"{son_u:.0f}%")
+            self._son_bar.setValue(son_u)
+
+            self._sync_lbl.setText("동기화됨")
+
+        # ── 표시 ──────────────────────────────────────────────────────────
+
+        def show_near(self, ref: QWidget):
+            self.adjustSize()
+            g = ref.frameGeometry()
+            scr = QGuiApplication.primaryScreen().geometry()
+            x = g.left() - self.width() - 8
+            y = g.bottom() - self.height()
+            self.move(
+                max(0, min(x, scr.width() - self.width())),
+                max(0, min(y, scr.height() - self.height() - 40)),
+            )
+            self.show(); self.raise_()
+            self.sync()
+            self._auto.start()
+
+        def hide(self):
+            self._auto.stop()
+            super().hide()
+
+        def keyPressEvent(self, ev):
+            if ev.key() == Qt.Key.Key_Escape:
+                self.hide()
+
+    # ──────────────────────────────────────────────────────────────────────
 
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
@@ -302,7 +578,9 @@ def run_widget(sw: int, sh: int):
             self._speech_a = 0     # 말풍선 불투명도 0-255
 
             self._drag_pos        = QPoint()
+            self._press_global    = QPoint()
             self._waiting_for_click = False
+            self._dashboard       = DashboardWindow()
 
             self._atimer = QTimer(self)
             self._atimer.setInterval(16)
@@ -548,12 +826,22 @@ def run_widget(sw: int, sh: int):
 
         def mousePressEvent(self, ev):
             if ev.button() == Qt.MouseButton.LeftButton:
+                self._press_global = ev.globalPosition().toPoint()
                 self._drag_pos = (ev.globalPosition().toPoint()
                                   - self.frameGeometry().topLeft())
 
         def mouseMoveEvent(self, ev):
             if ev.buttons() == Qt.MouseButton.LeftButton:
                 self.move(ev.globalPosition().toPoint() - self._drag_pos)
+
+        def mouseReleaseEvent(self, ev):
+            if ev.button() == Qt.MouseButton.LeftButton:
+                delta = ev.globalPosition().toPoint() - self._press_global
+                if delta.manhattanLength() < 6:
+                    if self._dashboard.isVisible():
+                        self._dashboard.hide()
+                    else:
+                        self._dashboard.show_near(self)
 
     widget = HopWidget()
     widget.show()
