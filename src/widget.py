@@ -329,7 +329,7 @@ def run_widget(sw: int, sh: int):
             self._q_timer.start()
 
             self._auto = QTimer(self)
-            self._auto.setInterval(30_000)
+            self._auto.setInterval(300_000)   # 5분
             self._auto.timeout.connect(self.sync)
 
         # ── UI 구성 ────────────────────────────────────────────────────────
@@ -517,30 +517,25 @@ def run_widget(sw: int, sh: int):
         # ── 표시 ──────────────────────────────────────────────────────────
 
         def show_near(self, ref: QWidget):
-            self.adjustSize()
-            g = ref.frameGeometry()
-            scr = QGuiApplication.primaryScreen().geometry()
-            x = g.left() - self.width() - 8
-            y = g.bottom() - self.height()
-            self.move(
-                max(0, min(x, scr.width() - self.width())),
-                max(0, min(y, scr.height() - self.height() - 40)),
-            )
+            self.move(*self._calc_pos(ref))
             self.show(); self.raise_()
             self.sync()
             self._auto.start()
 
-        def reposition(self, ref: QWidget):
-            """데이터 재요청 없이 위치만 갱신."""
+        def _calc_pos(self, ref: QWidget):
             self.adjustSize()
             g = ref.frameGeometry()
             scr = QGuiApplication.primaryScreen().geometry()
-            x = g.left() - self.width() - 8
-            y = g.bottom() - self.height()
-            self.move(
+            x = g.left() + g.width() // 2 - self.width() // 2   # 가로 중앙 정렬
+            y = g.top() - self.height() - 8                       # 캐릭터 머리 위
+            return (
                 max(0, min(x, scr.width() - self.width())),
                 max(0, min(y, scr.height() - self.height() - 40)),
             )
+
+        def reposition(self, ref: QWidget):
+            """데이터 재요청 없이 위치만 갱신."""
+            self.move(*self._calc_pos(ref))
 
         def hide(self):
             self._auto.stop()
@@ -674,6 +669,9 @@ def run_widget(sw: int, sh: int):
                 ctypes.windll.user32.GetAsyncKeyState(0x01)  # 잔여 비트 초기화
             self._ctimer.start()
             self._start_bounce()
+            # 대시보드가 열려 있으면 말풍선 위로 올라오도록 re-raise
+            if self._dashboard.isVisible():
+                self._dashboard.raise_()
             self.update()
 
         def _check_click(self):
