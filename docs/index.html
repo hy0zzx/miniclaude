@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HopClaude — Claude Code 알림 위젯</title>
+  <meta name="description" content="Claude Code가 응답을 마치거나 권한 확인이 필요할 때, 귀여운 캐릭터가 점프하며 알려주는 데스크톱 위젯" />
+  <meta property="og:title" content="HopClaude" />
+  <meta property="og:description" content="Claude Code가 응답하면 알려주는 데스크톱 위젯" />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link href="https://cdn.jsdelivr.net/npm/pretendard@latest/dist/web/static/pretendard.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --coral:  #DA7757;
+      --green:  #40BA83;
+      --orange: #E8933A;
+      --bg:     #FBFAF8;
+      --text:   #1A1A1A;
+      --muted:  #6B6560;
+      --border: #D8D4CE;
+      --card:   #FFFFFF;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── NAV ───────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(251,250,248,0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-github:hover { background: #F0EDEA; color: var(--text); }
+
+    /* ── HERO ──────────────────────────────── */
+    .hero {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 80px 24px 88px;
+      text-align: center;
+    }
+
+    .hero-char-wrap {
+      display: inline-block;
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .hero-char {
+      display: block;
+      animation: hop 1.4s cubic-bezier(.25,.46,.45,.94) infinite;
+      filter: drop-shadow(0 10px 18px rgba(218,119,87,0.22));
+    }
+
+    .hero-shadow {
+      display: block;
+      width: 54px;
+      height: 8px;
+      background: rgba(0,0,0,0.12);
+      border-radius: 50%;
+      margin: 4px auto 0;
+      animation: shadow-pulse 1.4s cubic-bezier(.25,.46,.45,.94) infinite;
+    }
+
+    @keyframes hop {
+      0%,100% { transform: translateY(0);      }
+      35%      { transform: translateY(-32px);  }
+      55%      { transform: translateY(-18px);  }
+      75%      { transform: translateY(-6px);   }
+      90%      { transform: translateY(0);      }
+    }
+
+    @keyframes shadow-pulse {
+      0%,100% { transform: scaleX(1);   opacity: .45; }
+      35%      { transform: scaleX(.5);  opacity: .18; }
+      55%      { transform: scaleX(.7);  opacity: .27; }
+      75%      { transform: scaleX(.9);  opacity: .38; }
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 7vw, 60px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 em { font-style: normal; color: var(--coral); }
+
+    .hero p {
+      font-size: clamp(15px, 2.5vw, 17px);
+      color: var(--muted);
+      max-width: 420px;
+      margin: 0 auto 40px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .btn-dl {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: var(--coral);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      border-radius: 12px;
+      text-decoration: none;
+      box-shadow: 0 4px 18px rgba(218,119,87,.32);
+      transition: transform .15s, box-shadow .15s;
+    }
+
+    .btn-dl:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(218,119,87,.42);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 22px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 500;
+      font-family: inherit;
+      border-radius: 12px;
+      text-decoration: none;
+      border: 1.5px solid var(--border);
+      transition: background .15s, color .15s;
+    }
+
+    .btn-ghost:hover { background: #F0EDEA; color: var(--text); }
+
+    .hero-badges {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+    }
+
+    /* ── SECTION COMMON ──────────────────── */
+    section { padding: 80px 24px; }
+
+    .inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .sec-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--coral);
+      margin-bottom: 10px;
+    }
+
+    .sec-title {
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 48px;
+    }
+
+    /* ── STATES ─────────────────────────── */
+    .states { background: white; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+    .states-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 580px) { .states-grid { grid-template-columns: 1fr; } }
+
+    .state-card {
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 28px 20px 24px;
+      text-align: center;
+      background: var(--bg);
+    }
+
+    .state-char-wrap {
+      display: inline-block;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .state-bubble {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      background: white;
+      border: 1px solid rgba(0,0,0,.09);
+      border-radius: 7px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+
+    .state-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid white;
+    }
+
+    .state-label {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 20px;
+      padding: 3px 10px;
+      margin-bottom: 10px;
+    }
+
+    .state-name {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .state-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── FEATURES ───────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .feat-card {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 26px 22px;
+    }
+
+    .feat-icon {
+      width: 42px;
+      height: 42px;
+      background: #FEF0EB;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 14px;
+    }
+
+    .feat-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .feat-card p  { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+    /* ── CTA ────────────────────────────── */
+    .cta {
+      background: var(--text);
+      color: white;
+    }
+
+    .cta .inner { text-align: center; }
+
+    .cta .sec-eyebrow { color: rgba(218,119,87,.9); }
+    .cta .sec-title   { color: white; margin-bottom: 12px; }
+
+    .cta-sub {
+      font-size: 15px;
+      color: rgba(255,255,255,.55);
+      margin-bottom: 36px;
+    }
+
+    .cta .btn-dl {
+      font-size: 16px;
+      padding: 16px 36px;
+    }
+
+    .cta-note {
+      margin-top: 18px;
+      font-size: 12px;
+      color: rgba(255,255,255,.3);
+    }
+
+    /* ── FOOTER ─────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+    footer .foot-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
+  </style>
+</head>
+<body>
+
+<!-- ══ NAV ══════════════════════════════════════════════════════════════════ -->
+<nav>
+  <a href="#" class="nav-logo">
+    <!-- 1× pixel art character (86×54) -->
+    <svg width="43" height="27" viewBox="0 0 86 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="11" y="0"  width="65" height="11" fill="#DA7757"/>
+      <rect x="11" y="11" width="11" height="11" fill="#DA7757"/>
+      <rect x="22" y="11" width="5"  height="11" fill="#FFFFFF"/>
+      <rect x="27" y="11" width="32" height="11" fill="#DA7757"/>
+      <rect x="59" y="11" width="5"  height="11" fill="#FFFFFF"/>
+      <rect x="64" y="11" width="12" height="11" fill="#DA7757"/>
+      <rect x="0"  y="22" width="86" height="10" fill="#DA7757"/>
+      <rect x="11" y="32" width="65" height="11" fill="#DA7757"/>
+      <rect x="16" y="43" width="6"  height="11" fill="#DA7757"/>
+      <rect x="27" y="43" width="6"  height="11" fill="#DA7757"/>
+      <rect x="54" y="43" width="5"  height="11" fill="#DA7757"/>
+      <rect x="64" y="43" width="6"  height="11" fill="#DA7757"/>
+    </svg>
+    HopClaude
+  </a>
+  <a href="https://github.com/hy0zzx/miniclaude" class="nav-github" target="_blank" rel="noopener">
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+               0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+               -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+               .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+               -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.67 7.67 0 0 1 2-.27
+               c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+               .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+               0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+    GitHub
+  </a>
+</nav>
+
+<!-- ══ HERO ═════════════════════════════════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-char-wrap">
+    <svg class="hero-char" width="172" height="108" viewBox="0 0 86 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="11" y="0"  width="65" height="11" fill="#DA7757"/>
+      <rect x="11" y="11" width="11" height="11" fill="#DA7757"/>
+      <rect x="22" y="11" width="5"  height="11" fill="#FFFFFF"/>
+      <rect x="27" y="11" width="32" height="11" fill="#DA7757"/>
+      <rect x="59" y="11" width="5"  height="11" fill="#FFFFFF"/>
+      <rect x="64" y="11" width="12" height="11" fill="#DA7757"/>
+      <rect x="0"  y="22" width="86" height="10" fill="#DA7757"/>
+      <rect x="11" y="32" width="65" height="11" fill="#DA7757"/>
+      <rect x="16" y="43" width="6"  height="11" fill="#DA7757"/>
+      <rect x="27" y="43" width="6"  height="11" fill="#DA7757"/>
+      <rect x="54" y="43" width="5"  height="11" fill="#DA7757"/>
+      <rect x="64" y="43" width="6"  height="11" fill="#DA7757"/>
+    </svg>
+    <div class="hero-shadow"></div>
+  </div>
+
+  <h1>Claude Code가 응답하면<br /><em>뛰어오르며</em> 알려줘요</h1>
+  <p>응답 완료·권한 확인 알림을 귀여운 픽셀 캐릭터가 점프와 말풍선으로 전달하는 데스크톱 위젯</p>
+
+  <div class="btn-row">
+    <a href="https://github.com/hy0zzx/miniclaude/releases/latest/download/HopClaude-Setup-1.0.0-win.exe"
+       class="btn-dl">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 12L2.5 6.5 3.91 5.09 7 8.17V1h2v7.17l3.09-3.08L13.5 6.5z"/>
+        <rect x="2" y="13" width="12" height="2"/>
+      </svg>
+      Windows 다운로드
+    </a>
+    <a href="https://github.com/hy0zzx/miniclaude" class="btn-ghost" target="_blank" rel="noopener">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+                 -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+                 .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+                 -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.67 7.67 0 0 1 2-.27
+                 c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+                 .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+                 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      GitHub에서 보기
+    </a>
+  </div>
+
+  <div class="hero-badges">
+    <span class="badge">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="#DA7757">
+        <path d="M1 3h14v2H1zM1 7h14v2H1zM1 11h8v2H1z"/>
+      </svg>
+      Windows 지원
+    </span>
+    <span class="badge">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="#40BA83">
+        <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm3.7 5.7l-4 4a1 1 0 0 1-1.4 0l-2-2a1 1 0 1 1 1.4-1.4L7 8.59l3.3-3.3a1 1 0 0 1 1.4 1.41z"/>
+      </svg>
+      무료 · 오픈소스
+    </span>
+    <span class="badge">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="#6B6560">
+        <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM7 4h2v5H7zm0 6h2v2H7z"/>
+      </svg>
+      Claude Code 훅 자동 등록
+    </span>
+  </div>
+</div>
+
+<!-- ══ STATES ════════════════════════════════════════════════════════════════ -->
+<section class="states">
+  <div class="inner">
+    <p class="sec-eyebrow">동작 방식</p>
+    <h2 class="sec-title">상태에 따라 캐릭터가 변해요</h2>
+
+    <div class="states-grid">
+
+      <!-- 대기 중 -->
+      <div class="state-card">
+        <div class="state-char-wrap" style="margin-top:38px;">
+          <svg width="86" height="54" viewBox="0 0 86 54" fill="none">
+            <rect x="11" y="0"  width="65" height="11" fill="#DA7757"/>
+            <rect x="11" y="11" width="11" height="11" fill="#DA7757"/>
+            <rect x="22" y="11" width="5"  height="11" fill="#FFFFFF"/>
+            <rect x="27" y="11" width="32" height="11" fill="#DA7757"/>
+            <rect x="59" y="11" width="5"  height="11" fill="#FFFFFF"/>
+            <rect x="64" y="11" width="12" height="11" fill="#DA7757"/>
+            <rect x="0"  y="22" width="86" height="10" fill="#DA7757"/>
+            <rect x="11" y="32" width="65" height="11" fill="#DA7757"/>
+            <rect x="16" y="43" width="6"  height="11" fill="#DA7757"/>
+            <rect x="27" y="43" width="6"  height="11" fill="#DA7757"/>
+            <rect x="54" y="43" width="5"  height="11" fill="#DA7757"/>
+            <rect x="64" y="43" width="6"  height="11" fill="#DA7757"/>
+          </svg>
+        </div>
+        <span class="state-label" style="background:#FEF0EB;color:#DA7757;">대기 중</span>
+        <p class="state-name">코랄 캐릭터</p>
+        <p class="state-desc">Claude Code가 작업 중일 때의 기본 상태예요</p>
+      </div>
+
+      <!-- 응답 완료 -->
+      <div class="state-card">
+        <div class="state-char-wrap" style="margin-top:38px;">
+          <span class="state-bubble">응답 도착!</span>
+          <svg width="86" height="54" viewBox="0 0 86 54" fill="none">
+            <rect x="11" y="0"  width="65" height="11" fill="#40BA83"/>
+            <rect x="11" y="11" width="11" height="11" fill="#40BA83"/>
+            <rect x="22" y="11" width="5"  height="11" fill="#FFFFFF"/>
+            <rect x="27" y="11" width="32" height="11" fill="#40BA83"/>
+            <rect x="59" y="11" width="5"  height="11" fill="#FFFFFF"/>
+            <rect x="64" y="11" width="12" height="11" fill="#40BA83"/>
+            <rect x="0"  y="22" width="86" height="10" fill="#40BA83"/>
+            <rect x="11" y="32" width="65" height="11" fill="#40BA83"/>
+            <rect x="16" y="43" width="6"  height="11" fill="#40BA83"/>
+            <rect x="27" y="43" width="6"  height="11" fill="#40BA83"/>
+            <rect x="54" y="43" width="5"  height="11" fill="#40BA83"/>
+            <rect x="64" y="43" width="6"  height="11" fill="#40BA83"/>
+          </svg>
+        </div>
+        <span class="state-label" style="background:#E8F8F1;color:#40BA83;">응답 완료</span>
+        <p class="state-name">초록 캐릭터 + 점프</p>
+        <p class="state-desc">Claude Code 작업이 끝나면 캐릭터가 초록으로 바뀌며 뛰어올라요</p>
+      </div>
+
+      <!-- 확인 필요 -->
+      <div class="state-card">
+        <div class="state-char-wrap" style="margin-top:38px;">
+          <span class="state-bubble">확인 필요!</span>
+          <svg width="86" height="54" viewBox="0 0 86 54" fill="none">
+            <rect x="11" y="0"  width="65" height="11" fill="#E8933A"/>
+            <rect x="11" y="11" width="11" height="11" fill="#E8933A"/>
+            <rect x="22" y="11" width="5"  height="11" fill="#FFFFFF"/>
+            <rect x="27" y="11" width="32" height="11" fill="#E8933A"/>
+            <rect x="59" y="11" width="5"  height="11" fill="#FFFFFF"/>
+            <rect x="64" y="11" width="12" height="11" fill="#E8933A"/>
+            <rect x="0"  y="22" width="86" height="10" fill="#E8933A"/>
+            <rect x="11" y="32" width="65" height="11" fill="#E8933A"/>
+            <rect x="16" y="43" width="6"  height="11" fill="#E8933A"/>
+            <rect x="27" y="43" width="6"  height="11" fill="#E8933A"/>
+            <rect x="54" y="43" width="5"  height="11" fill="#E8933A"/>
+            <rect x="64" y="43" width="6"  height="11" fill="#E8933A"/>
+          </svg>
+        </div>
+        <span class="state-label" style="background:#FEF4E8;color:#E8933A;">확인 필요</span>
+        <p class="state-name">주황 캐릭터 + 점프</p>
+        <p class="state-desc">권한 확인이나 입력이 필요할 때 주황색으로 알려줘요</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ FEATURES ══════════════════════════════════════════════════════════════ -->
+<section>
+  <div class="inner">
+    <p class="sec-eyebrow">주요 기능</p>
+    <h2 class="sec-title">Claude Code를 더 편하게</h2>
+
+    <div class="features-grid">
+
+      <div class="feat-card">
+        <div class="feat-icon">🔔</div>
+        <h3>즉각적인 알림</h3>
+        <p>Claude Code 응답 완료 또는 권한 확인 요청이 오는 순간 캐릭터가 점프하며 말풍선으로 알려줘요. 다른 창을 보고 있어도 놓치지 않아요.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <h3>사용량 대시보드</h3>
+        <p>캐릭터를 클릭하면 현재 세션 사용량과 이번 주 Claude 모델별 토큰 사용량을 한눈에 확인할 수 있어요. 5분마다 자동 갱신됩니다.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon">🖱️</div>
+        <h3>자유로운 배치</h3>
+        <p>위젯을 드래그해서 모니터 어디에든 배치할 수 있어요. 자리를 옮기면 대시보드도 따라와요.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon">👻</div>
+        <h3>잠깐 숨기기</h3>
+        <p>캐릭터를 클릭하면 5초간 반투명으로 사라져요. 화면이 복잡할 때 잠깐 비켜달라고 할 수 있어요.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon">⚡</div>
+        <h3>자동 시작 & 훅 등록</h3>
+        <p>설치 시 Windows 시작 프로그램과 Claude Code 훅이 자동으로 등록돼요. 설정 없이 바로 쓸 수 있어요.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon">🕐</div>
+        <h3>시간대별 인사</h3>
+        <p>아침·점심·저녁·새벽 각각 다른 메시지로 인사해줘요. 오래 작업하는 날도 조금 더 즐겁게.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ HOW TO INSTALL ════════════════════════════════════════════════════════ -->
+<section style="background:white;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="inner">
+    <p class="sec-eyebrow">설치 방법</p>
+    <h2 class="sec-title">설치는 30초면 충분해요</h2>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="width:32px;height:32px;min-width:32px;background:var(--coral);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">1</div>
+        <div>
+          <p style="font-weight:600;font-size:14px;margin-bottom:4px;">인스톨러 실행</p>
+          <p style="font-size:13px;color:var(--muted);">HopClaude-Setup-1.0.0-win.exe를 다운로드해서 실행하세요</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="width:32px;height:32px;min-width:32px;background:var(--coral);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">2</div>
+        <div>
+          <p style="font-weight:600;font-size:14px;margin-bottom:4px;">자동 시작 체크</p>
+          <p style="font-size:13px;color:var(--muted);">설치 중 "Windows 시작 시 자동 실행" 체크 유지를 권장해요</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="width:32px;height:32px;min-width:32px;background:var(--coral);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">3</div>
+        <div>
+          <p style="font-weight:600;font-size:14px;margin-bottom:4px;">완료!</p>
+          <p style="font-size:13px;color:var(--muted);">위젯이 바로 실행되고 Claude Code 훅도 자동 등록돼요</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ CTA ════════════════════════════════════════════════════════════════════ -->
+<section class="cta">
+  <div class="inner">
+    <p class="sec-eyebrow">무료 다운로드</p>
+    <h2 class="sec-title">지금 바로 시작해보세요</h2>
+    <p class="cta-sub">Windows · 설치 파일 크기 약 30 MB</p>
+    <a href="https://github.com/hy0zzx/miniclaude/releases/latest/download/HopClaude-Setup-1.0.0-win.exe"
+       class="btn-dl">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 12L2.5 6.5 3.91 5.09 7 8.17V1h2v7.17l3.09-3.08L13.5 6.5z"/>
+        <rect x="2" y="13" width="12" height="2"/>
+      </svg>
+      HopClaude 다운로드 — v1.0.0
+    </a>
+    <p class="cta-note">
+      <a href="https://github.com/hy0zzx/miniclaude/releases" style="color:rgba(255,255,255,.35);text-decoration:underline;">모든 버전 보기</a>
+      &nbsp;·&nbsp; MIT License
+    </p>
+  </div>
+</section>
+
+<!-- ══ FOOTER ════════════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="foot-row">
+    <a href="https://github.com/hy0zzx/miniclaude" target="_blank" rel="noopener">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:middle;margin-right:4px;">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+                 -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+                 .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+                 -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.67 7.67 0 0 1 2-.27
+                 c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+                 .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+                 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      hy0zzx/miniclaude
+    </a>
+    <span>·</span>
+    <span>MIT License</span>
+    <span>·</span>
+    <span>Made with Claude Code</span>
+  </div>
+</footer>
+
+</body>
+</html>
