@@ -270,22 +270,24 @@ def run_widget(sw: int, sh: int):
         def __init__(self):
             super().__init__()
             self._v = 0.0
-            self.setFixedHeight(30)
+            self.setFixedHeight(40)
+            self.setContentsMargins(0, 0, 0, 0)
         def setValue(self, v): self._v = max(0.0, min(100.0, v)); self.update()
         def paintEvent(self, _):
             p = QPainter(self)
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
-            w, bh, by = self.width(), 6, 0
+            w, bh, by, r = self.width(), 18, 2, 5
             p.setBrush(QBrush(QColor("#E0DDD8"))); p.setPen(Qt.PenStyle.NoPen)
-            p.drawRoundedRect(QRectF(0, by, w, bh), 3, 3)
+            p.drawRoundedRect(QRectF(0, by, w, bh), r, r)
             if self._v > 0:
-                p.setBrush(QBrush(QColor("#00875A")))
-                p.drawRoundedRect(QRectF(0, by, w * self._v / 100, bh), 3, 3)
+                p.setBrush(QBrush(QColor("#40BA83")))
+                p.drawRoundedRect(QRectF(0, by, w * self._v / 100, bh), r, r)
             font = QFont(SPEECH_FONT_FAMILY, 8); p.setFont(font)
             p.setPen(QPen(QColor("#AAAAAA")))
             for t in (0, 25, 50, 75, 100):
                 tx = w * t / 100
-                p.drawText(QRectF(tx - 14, by + bh + 3, 28, 14),
+                label_x = max(0.0, min(tx - 14, w - 28))
+                p.drawText(QRectF(label_x, by + bh + 4, 28, 14),
                            Qt.AlignmentFlag.AlignHCenter, str(t))
             p.end()
 
@@ -294,17 +296,17 @@ def run_widget(sw: int, sh: int):
         def __init__(self):
             super().__init__()
             self._v = 0.0
-            self.setFixedHeight(5)
+            self.setFixedHeight(20)
         def setValue(self, v): self._v = max(0.0, min(100.0, v)); self.update()
         def paintEvent(self, _):
             p = QPainter(self)
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
-            w, h = self.width(), self.height()
+            w, h, r = self.width(), self.height(), 5
             p.setBrush(QBrush(QColor("#E0DDD8"))); p.setPen(Qt.PenStyle.NoPen)
-            p.drawRoundedRect(QRectF(0, 0, w, h), h / 2, h / 2)
+            p.drawRoundedRect(QRectF(0, 0, w, h), r, r)
             if self._v > 0:
-                p.setBrush(QBrush(QColor("#00875A")))
-                p.drawRoundedRect(QRectF(0, 0, w * self._v / 100, h), h / 2, h / 2)
+                p.setBrush(QBrush(QColor("#40BA83")))
+                p.drawRoundedRect(QRectF(0, 0, w * self._v / 100, h), r, r)
             p.end()
 
     class DashboardWindow(QWidget):
@@ -317,7 +319,6 @@ def run_widget(sw: int, sh: int):
                 | Qt.WindowType.WindowStaysOnTopHint
                 | Qt.WindowType.Tool
             )
-            self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             self.setFixedWidth(290)
             self._update_q: list = []
             self._syncing = False
@@ -329,83 +330,102 @@ def run_widget(sw: int, sh: int):
             self._q_timer.start()
 
             self._auto = QTimer(self)
-            self._auto.setInterval(30_000)
+            self._auto.setInterval(300_000)  # 5분
             self._auto.timeout.connect(self.sync)
 
         # ── UI 구성 ────────────────────────────────────────────────────────
 
         def _build_ui(self):
-            from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QLabel,
-                                          QFrame, QGraphicsDropShadowEffect)
+            from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QLabel, QFrame)
             outer = QVBoxLayout(self)
-            outer.setContentsMargins(10, 10, 10, 10)
+            outer.setContentsMargins(0, 0, 0, 0)  # 투명 여백 없음
 
+            self.setStyleSheet("background:#FBFAF8;")
             card = QFrame()
-            card.setStyleSheet("QFrame{background:#EDE9E3;border-radius:14px;}")
-            shadow = QGraphicsDropShadowEffect()
-            shadow.setBlurRadius(20); shadow.setOffset(0, 4)
-            shadow.setColor(QColor(0, 0, 0, 60))
-            card.setGraphicsEffect(shadow)
+            card.setStyleSheet("QFrame{background:#FBFAF8;border-radius:14px;}")
             outer.addWidget(card)
 
             lay = QVBoxLayout(card)
             lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(0)
 
+            # ── 최상단 핸들 pill ───────────────────────────────────────────
+            ind_w = QWidget(); ind_w.setFixedHeight(22)
+            ind_w.setStyleSheet("background:transparent;")
+            ind_l = QHBoxLayout(ind_w)
+            ind_l.setContentsMargins(0, 10, 0, 0); ind_l.setSpacing(0)
+            self._indicator = QLabel()
+            self._indicator.setFixedSize(36, 4)
+            self._indicator.setStyleSheet("background:#C8C3BB;border-radius:2px;")
+            ind_l.addStretch(); ind_l.addWidget(self._indicator); ind_l.addStretch()
+            lay.addWidget(ind_w)
+
             # ── 헤더 ──────────────────────────────────────────────────────
             hdr = QWidget(); hdr.setStyleSheet("background:transparent;")
-            hl = QHBoxLayout(hdr); hl.setContentsMargins(14, 13, 14, 8); hl.setSpacing(6)
+            hl = QHBoxLayout(hdr); hl.setContentsMargins(14, 10, 14, 18); hl.setSpacing(8)
 
-            # 픽셀 아이콘
-            px = QPixmap(14, 14); px.fill(Qt.GlobalColor.transparent)
-            pp = QPainter(px); pp.setPen(Qt.PenStyle.NoPen)
-            pp.setBrush(QBrush(CORAL))
-            for rx2, ry2, rw2, rh2 in [(2,0,10,2),(0,2,14,3),(2,5,10,3),(1,8,3,3),(5,8,3,3),(8,8,3,3),(11,8,3,3)]:
-                pp.drawRect(rx2, ry2, rw2, rh2)
-            pp.end()
-            ico = QLabel(); ico.setPixmap(px)
+            # 캐릭터 픽셀아트를 26x16으로 렌더링해 아이콘으로 사용
+            _char_full = QPixmap(CHAR_W, CHAR_H); _char_full.fill(Qt.GlobalColor.transparent)
+            _cp = QPainter(_char_full); _cp.setPen(Qt.PenStyle.NoPen)
+            for _rx, _ry, _rw, _rh, _col in RECTS:
+                _cp.fillRect(_rx, _ry, _rw, _rh, _col)
+            _cp.end()
+            _char_icon = _char_full.scaled(
+                26, 16,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.FastTransformation,
+            )
+            ico = QLabel(); ico.setPixmap(_char_icon)
             hl.addWidget(ico)
 
-            ttl = QLabel("Claude 모니터")
+            ttl = QLabel("HopClaude")
             ttl.setFont(QFont(SPEECH_FONT_FAMILY, 11, QFont.Weight.Bold))
             ttl.setStyleSheet("color:#1A1A1A;background:transparent;")
             hl.addWidget(ttl)
-
-            badge = QLabel("Max")
-            badge.setFont(QFont(SPEECH_FONT_FAMILY, 9, QFont.Weight.Bold))
-            badge.setStyleSheet("background:#DA7757;color:white;border-radius:4px;padding:1px 7px;")
-            hl.addWidget(badge)
             hl.addStretch()
             lay.addWidget(hdr)
 
+            # 구분선
+            sep = QFrame(); sep.setFixedHeight(1)
+            sep.setStyleSheet("QFrame{background:#D8D4CE;margin-left:14px;margin-right:14px;}")
+            lay.addWidget(sep)
+
             def _section():
+                from PyQt6.QtWidgets import QGraphicsDropShadowEffect
+                w = QWidget(); w.setStyleSheet("background:transparent;")
+                wl = QVBoxLayout(w); wl.setContentsMargins(10, 18, 10, 10); wl.setSpacing(0)
                 f = QFrame()
-                f.setStyleSheet("QFrame{background:white;border-radius:10px;margin:0 8px 6px 8px;}")
-                return f
+                f.setStyleSheet("QFrame{background:white;border-radius:10px;}")
+                sh = QGraphicsDropShadowEffect()
+                sh.setBlurRadius(14); sh.setOffset(0, 3)
+                sh.setColor(QColor(0, 0, 0, 55))
+                f.setGraphicsEffect(sh)
+                wl.addWidget(f)
+                return w, f
 
             # ── 현재 세션 카드 ─────────────────────────────────────────────
-            sc = _section(); sl = QVBoxLayout(sc)
-            sl.setContentsMargins(12, 10, 12, 12); sl.setSpacing(4)
+            sc_w, sc = _section(); sl = QVBoxLayout(sc)
+            sl.setContentsMargins(14, 12, 14, 14); sl.setSpacing(8)
             sr = QHBoxLayout()
             st = QLabel("현재 세션"); st.setFont(QFont(SPEECH_FONT_FAMILY, 11, QFont.Weight.DemiBold))
             st.setStyleSheet("color:#1A1A1A;background:transparent;")
             sr.addWidget(st); sr.addStretch()
             self._sess_pct = QLabel("—%")
             self._sess_pct.setFont(QFont(SPEECH_FONT_FAMILY, 16, QFont.Weight.Bold))
-            self._sess_pct.setStyleSheet("color:#00875A;background:transparent;")
+            self._sess_pct.setStyleSheet("color:#40BA83;background:transparent;")
             sr.addWidget(self._sess_pct); sl.addLayout(sr)
             self._sess_bar = _TickBar(); sl.addWidget(self._sess_bar)
             self._sess_reset = QLabel("불러오는 중...")
             self._sess_reset.setFont(QFont(SPEECH_FONT_FAMILY, 9))
             self._sess_reset.setStyleSheet("color:#999;background:transparent;")
             sl.addWidget(self._sess_reset)
-            lay.addWidget(sc)
+            lay.addWidget(sc_w)
 
             # ── 주간 사용량 카드 ───────────────────────────────────────────
-            wc = _section(); wl = QVBoxLayout(wc)
-            wl.setContentsMargins(12, 10, 12, 12); wl.setSpacing(5)
+            wc_w, wc = _section(); wl2 = QVBoxLayout(wc)
+            wl2.setContentsMargins(14, 12, 14, 14); wl2.setSpacing(8)
             wt = QLabel("주간 사용량"); wt.setFont(QFont(SPEECH_FONT_FAMILY, 11, QFont.Weight.DemiBold))
             wt.setStyleSheet("color:#1A1A1A;background:transparent;")
-            wl.addWidget(wt)
+            wl2.addWidget(wt)
 
             def _row(label_text):
                 r = QHBoxLayout()
@@ -413,30 +433,39 @@ def run_widget(sw: int, sh: int):
                 lb.setStyleSheet("color:#555;background:transparent;")
                 r.addWidget(lb); r.addStretch()
                 pct = QLabel("—%"); pct.setFont(QFont(SPEECH_FONT_FAMILY, 10, QFont.Weight.Bold))
-                pct.setStyleSheet("color:#00875A;background:transparent;")
+                pct.setStyleSheet("color:#40BA83;background:transparent;")
                 r.addWidget(pct)
                 bar = _SimpleBar()
                 return r, pct, bar
 
             r1, self._all_pct, self._all_bar = _row("전체 모델")
-            wl.addLayout(r1); wl.addWidget(self._all_bar)
+            wl2.addLayout(r1); wl2.addWidget(self._all_bar)
+            wl2.addSpacing(16)
             r2, self._son_pct, self._son_bar = _row("Sonnet 전용")
-            wl.addLayout(r2); wl.addWidget(self._son_bar)
-            lay.addWidget(wc)
+            wl2.addLayout(r2); wl2.addWidget(self._son_bar)
+            lay.addWidget(wc_w)
 
             # ── 푸터 ──────────────────────────────────────────────────────
             ft = QWidget(); ft.setStyleSheet("background:transparent;")
-            fl = QHBoxLayout(ft); fl.setContentsMargins(14, 4, 14, 12); fl.setSpacing(8)
+            fl = QVBoxLayout(ft); fl.setContentsMargins(0, 20, 0, 0); fl.setSpacing(0)
+
+            ft_sep = QFrame(); ft_sep.setFixedHeight(1)
+            ft_sep.setStyleSheet("QFrame{background:#D8D4CE;margin-left:14px;margin-right:14px;}")
+            fl.addWidget(ft_sep)
+
+            ft_row = QWidget(); ft_row.setStyleSheet("background:transparent;")
+            fl_row = QHBoxLayout(ft_row); fl_row.setContentsMargins(14, 10, 14, 18); fl_row.setSpacing(8)
             self._sync_lbl = QLabel("동기화 안됨")
             self._sync_lbl.setFont(QFont(SPEECH_FONT_FAMILY, 9))
             self._sync_lbl.setStyleSheet("color:#AAA;background:transparent;")
-            fl.addWidget(self._sync_lbl); fl.addStretch()
+            fl_row.addWidget(self._sync_lbl); fl_row.addStretch()
             for txt, fn in [("동기화", self.sync), ("닫기", self.hide)]:
                 btn = QLabel(txt); btn.setFont(QFont(SPEECH_FONT_FAMILY, 9))
                 btn.setStyleSheet("color:#DA7757;background:transparent;")
                 btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn.mousePressEvent = (lambda _f=fn: lambda _: _f())()
-                fl.addWidget(btn)
+                fl_row.addWidget(btn)
+            fl.addWidget(ft_row)
             lay.addWidget(ft)
             self.adjustSize()
 
@@ -452,10 +481,10 @@ def run_widget(sw: int, sh: int):
 
         def _bg_fetch(self):
             try:
-                import urllib.request
+                import urllib.request, urllib.error
                 token = read_access_token()
                 if not token:
-                    self._update_q.append(None); return
+                    self._update_q.append(("err", "토큰 없음")); return
                 req = urllib.request.Request(
                     "https://api.anthropic.com/api/oauth/usage",
                     headers={
@@ -465,15 +494,25 @@ def run_widget(sw: int, sh: int):
                     },
                 )
                 r = urllib.request.urlopen(req, timeout=8)
-                self._update_q.append(json.loads(r.read()))
+                self._update_q.append(("ok", json.loads(r.read())))
+            except urllib.error.HTTPError as e:
+                if e.code == 429:
+                    self._update_q.append(("err", "잠시 후 재시도"))
+                else:
+                    self._update_q.append(("err", f"오류 {e.code}"))
             except Exception:
-                self._update_q.append(None)
+                self._update_q.append(("err", "네트워크 오류"))
 
         def _drain_queue(self):
             if self._update_q:
-                data = self._update_q.pop(0)
+                item = self._update_q.pop(0)
                 self._syncing = False
-                self._apply(data)
+                if isinstance(item, tuple) and item[0] == "ok":
+                    self._apply(item[1])
+                elif isinstance(item, tuple) and item[0] == "err":
+                    self._sync_lbl.setText(item[1])
+                else:
+                    self._apply(item)  # 하위 호환
 
         def _apply(self, data):
             import datetime
@@ -520,8 +559,10 @@ def run_widget(sw: int, sh: int):
             self.adjustSize()
             g = ref.frameGeometry()
             scr = QGuiApplication.primaryScreen().geometry()
-            x = g.left() - self.width() - 10
-            y = g.bottom() - self.height()
+            x = g.left() + CHAR_X - self.width() - 5
+            # 그림자 중심(SHAD_CY) + 그림자 반경(3) 기준으로 하단 맞춤
+            shadow_bottom = g.top() + SHAD_CY + 3
+            y = shadow_bottom - self.height()
             self.move(
                 max(0, min(x, scr.width() - self.width())),
                 max(0, min(y, scr.height() - self.height() - 40)),
@@ -532,11 +573,11 @@ def run_widget(sw: int, sh: int):
 
         def reposition(self, ref: QWidget):
             """데이터 재요청 없이 위치만 갱신."""
-            self.adjustSize()
-            g = ref.frameGeometry()
+            p = ref.pos()
             scr = QGuiApplication.primaryScreen().geometry()
-            x = g.left() - self.width() - 10
-            y = g.bottom() - self.height()
+            x = p.x() + CHAR_X - self.width() - 5
+            shadow_bottom = p.y() + SHAD_CY + 3
+            y = shadow_bottom - self.height()
             self.move(
                 max(0, min(x, scr.width() - self.width())),
                 max(0, min(y, scr.height() - self.height() - 40)),
@@ -555,14 +596,15 @@ def run_widget(sw: int, sh: int):
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
 
-    # ── 커스텀 폰트 로드 ──────────────────────────────────────────────────
+    # ── 커스텀 폰트 로드 (Pretendard) ────────────────────────────────────
     _base = (sys._MEIPASS if getattr(sys, "frozen", False)
              else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    _font_path = os.path.join(_base, "assets", "fonts", "text",
-                              "SF-Pro-Text-Medium.otf")
-    _fid = QFontDatabase.addApplicationFont(_font_path)
-    _families = QFontDatabase.applicationFontFamilies(_fid) if _fid >= 0 else []
-    SPEECH_FONT_FAMILY = _families[0] if _families else "Segoe UI"
+    _font_dir = os.path.join(_base, "assets", "fonts")
+    _fid_reg = QFontDatabase.addApplicationFont(os.path.join(_font_dir, "Pretendard-Regular.ttf"))
+    for _w in ["Thin","ExtraLight","Light","Medium","SemiBold","Bold","ExtraBold","Black"]:
+        QFontDatabase.addApplicationFont(os.path.join(_font_dir, f"Pretendard-{_w}.ttf"))
+    _fams = QFontDatabase.applicationFontFamilies(_fid_reg) if _fid_reg >= 0 else []
+    SPEECH_FONT_FAMILY = _fams[0] if _fams else "Malgun Gothic"
 
     screen = QGuiApplication.primaryScreen()
     if screen:
@@ -797,6 +839,7 @@ def run_widget(sw: int, sh: int):
         def _draw_speech(self, p: QPainter):
             a    = self._speech_a
             font = QFont(SPEECH_FONT_FAMILY, 9)
+            p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
             p.setFont(font)
             fm   = QFontMetrics(font)
             tw   = fm.horizontalAdvance(self._speech)
