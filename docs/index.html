@@ -65,25 +65,36 @@
     .lang-toggle {
       display: inline-flex;
       align-items: center;
-      gap: 2px;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: inherit;
-      background: transparent;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 5px 12px;
+      background: #EDEAE6;
+      border: none;
+      border-radius: 10px;
+      padding: 3px;
       cursor: pointer;
-      color: var(--text);
-      transition: background 0.15s;
+      gap: 0;
     }
 
-    .lang-toggle:hover { background: #F0EDEA; }
+    .lang-toggle .t-ko,
+    .lang-toggle .t-en {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      padding: 5px 13px;
+      border-radius: 7px;
+      color: var(--muted);
+      transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    }
 
-    .lang-toggle .sep { margin: 0 4px; color: var(--border); }
+    html:not(.en) .lang-toggle .t-ko {
+      background: var(--coral);
+      color: white;
+      box-shadow: 0 1px 4px rgba(218,119,87,0.30);
+    }
 
-    html:not(.en) .lang-toggle .t-en { opacity: 0.38; }
-    html.en        .lang-toggle .t-ko { opacity: 0.38; }
+    html.en .lang-toggle .t-en {
+      background: var(--coral);
+      color: white;
+      box-shadow: 0 1px 4px rgba(218,119,87,0.30);
+    }
 
     /* ── HERO ─────────────────────────────────────────────────────────────── */
     .hero {
@@ -184,6 +195,23 @@
       flex-wrap: wrap;
     }
 
+    .hero-preview {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    .hero-arrow {
+      display: block;
+      margin: 200px auto 200px;
+      color: var(--border);
+    }
+
+    .preview-img {
+      width: 260px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+    }
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -242,15 +270,15 @@
     }
 
     .state-char-wrap {
-      display: inline-block;
+      display: block;
+      width: fit-content;
       position: relative;
-      margin-top: 36px;
-      margin-bottom: 12px;
+      margin: 52px auto 12px;
     }
 
     .state-bubble {
       position: absolute;
-      top: -30px;
+      top: -46px;
       left: 50%;
       transform: translateX(-50%);
       white-space: nowrap;
@@ -322,20 +350,57 @@
       background: white;
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
+      padding: 100px 24px;
+    }
+
+    .install-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+
+    @media (max-width: 640px) {
+      .install-inner { grid-template-columns: 1fr; gap: 40px; }
+    }
+
+    .install-left .sec-eyebrow { margin-bottom: 10px; }
+    .install-left .sec-title   { margin-bottom: 16px; }
+    .install-left .install-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
     }
 
     .install-steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
+      display: flex;
+      flex-direction: column;
     }
 
-    .step { display: flex; gap: 16px; align-items: flex-start; }
+    .step {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      position: relative;
+      padding-bottom: 44px;
+    }
+
+    .step:last-child { padding-bottom: 0; }
+
+    .step:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 17px;
+      top: 36px;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--border), transparent);
+    }
 
     .step-num {
-      width: 32px;
-      height: 32px;
-      min-width: 32px;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
       background: var(--coral);
       color: white;
       border-radius: 50%;
@@ -344,13 +409,15 @@
       justify-content: center;
       font-weight: 700;
       font-size: 14px;
+      position: relative;
+      z-index: 1;
     }
 
-    .step h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-    .step p  { font-size: 13px; color: var(--muted); }
+    .step h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; padding-top: 6px; }
+    .step p  { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
     /* ── CTA ──────────────────────────────────────────────────────────────── */
-    .cta { background: var(--text); color: white; }
+    .cta { background: var(--text); color: white; padding: 140px 24px; }
 
     .cta .inner { text-align: center; }
     .cta .sec-eyebrow { color: rgba(218,119,87,.85); }
@@ -407,9 +474,8 @@
   </a>
 
   <button class="lang-toggle" id="langToggle" aria-label="Toggle language">
-    <span class="t-ko">한국어</span>
-    <span class="sep">·</span>
-    <span class="t-en">English</span>
+    <span class="t-ko">KO</span>
+    <span class="t-en">EN</span>
   </button>
 </nav>
 
@@ -438,8 +504,8 @@
     <span class="en">Know the moment<br />Claude Code <em>responds</em></span>
   </h1>
 
-  <p class="ko">응답 완료·권한 확인 알림을 귀여운 픽셀 캐릭터가 점프와 말풍선으로 전달하는 데스크톱 위젯</p>
-  <p class="en">A desktop widget that notifies you through a bouncing pixel character when Claude Code finishes a task or needs your input</p>
+  <p class="ko">클로드가 권한 승인 대기 및 응답 완료 시 <br /> 알려주는 데스크톱 위젯 입니다.</p>
+  <p class="en">Claude pixel character that alerts you the moment<br />Claude Code finishes or needs your input.</p>
 
   <div class="btn-row">
     <a href="https://github.com/hy0zzx/miniclaude/releases/latest/download/HopClaude-Setup-1.0.0-win.exe" class="btn-dl">
@@ -459,19 +525,13 @@
     </a>
   </div>
 
-  <div class="hero-badges">
-    <span class="badge">
-      <svg width="11" height="11" viewBox="0 0 16 16" fill="#DA7757"><rect x="1" y="1" width="14" height="3"/><rect x="1" y="6" width="14" height="3"/><rect x="1" y="11" width="9" height="3"/></svg>
-      <span class="ko">Windows 지원</span><span class="en">Windows</span>
-    </span>
-    <span class="badge">
-      <svg width="11" height="11" viewBox="0 0 16 16" fill="#40BA83"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm3.7 5.7l-4 4a1 1 0 0 1-1.4 0l-2-2a1 1 0 1 1 1.4-1.4L7 8.59l3.3-3.3a1 1 0 0 1 1.4 1.41z"/></svg>
-      <span class="ko">무료 · 오픈소스</span><span class="en">Free & open source</span>
-    </span>
-    <span class="badge">
-      <svg width="11" height="11" viewBox="0 0 16 16" fill="#6B6560"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM7 4h2v5H7zm0 6h2v2H7z"/></svg>
-      <span class="ko">Claude Code 훅 자동 등록</span><span class="en">Auto-registers Claude Code hooks</span>
-    </span>
+
+  <div class="hero-preview">
+    <svg class="hero-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="5 4 12 10 19 4"/>
+      <polyline points="5 13 12 19 19 13"/>
+    </svg>
+    <img src="Dashboard.png?v=2" alt="HopClaude 대시보드 미리보기" class="preview-img" />
   </div>
 </div>
 
@@ -505,9 +565,6 @@
             <rect x="64" y="43" width="6"  height="11" fill="#DA7757"/>
           </svg>
         </div>
-        <span class="state-label" style="background:#FEF0EB;color:#DA7757;">
-          <span class="ko">대기 중</span><span class="en">Idle</span>
-        </span>
         <p class="state-name ko">코랄 캐릭터</p>
         <p class="state-name en">Coral character</p>
         <p class="state-desc ko">Claude Code가 작업 중일 때의 기본 상태예요</p>
@@ -533,9 +590,6 @@
             <rect x="64" y="43" width="6"  height="11" fill="#40BA83"/>
           </svg>
         </div>
-        <span class="state-label" style="background:#E8F8F1;color:#40BA83;">
-          <span class="ko">응답 완료</span><span class="en">Done</span>
-        </span>
         <p class="state-name ko">초록 캐릭터 + 점프</p>
         <p class="state-name en">Green + bounce</p>
         <p class="state-desc ko">작업이 끝나면 초록으로 바뀌며 뛰어올라요</p>
@@ -561,13 +615,10 @@
             <rect x="64" y="43" width="6"  height="11" fill="#E8933A"/>
           </svg>
         </div>
-        <span class="state-label" style="background:#FEF4E8;color:#E8933A;">
-          <span class="ko">확인 필요</span><span class="en">Action needed</span>
-        </span>
-        <p class="state-name ko">주황 캐릭터 + 점프</p>
-        <p class="state-name en">Orange + bounce</p>
-        <p class="state-desc ko">권한 확인이나 입력이 필요할 때 주황색으로 알려줘요</p>
-        <p class="state-desc en">Turns orange when Claude needs permission or input</p>
+        <p class="state-name ko">노랑 캐릭터 + 점프</p>
+        <p class="state-name en">Yellow + bounce</p>
+        <p class="state-desc ko">권한 확인이나 입력이 필요할 때 노란색으로 알려줘요</p>
+        <p class="state-desc en">Turns yellow when Claude needs permission or input</p>
       </div>
 
     </div>
@@ -608,14 +659,8 @@
         <p class="en">Drag the widget to any position on your monitor. The dashboard follows along when you move it.</p>
       </div>
 
-      <div class="feat-card">
-        <div class="feat-icon">👻</div>
-        <h3><span class="ko">잠깐 숨기기</span><span class="en">Quick hide</span></h3>
-        <p class="ko">캐릭터를 클릭하면 5초간 반투명으로 사라져요. 화면이 복잡할 때 잠깐 비켜달라고 할 수 있어요.</p>
-        <p class="en">Click the character to make it fade out for 5 seconds. Handy when your screen gets busy.</p>
-      </div>
 
-      <div class="feat-card">
+<div class="feat-card">
         <div class="feat-icon">⚡</div>
         <h3><span class="ko">자동 시작 &amp; 훅 등록</span><span class="en">Auto-start &amp; hooks</span></h3>
         <p class="ko">설치 시 Windows 시작 프로그램과 Claude Code 훅이 자동으로 등록돼요. 설정 없이 바로 쓸 수 있어요.</p>
@@ -629,6 +674,13 @@
         <p class="en">Different messages for morning, afternoon, evening, and late night. A small touch that makes long sessions more enjoyable.</p>
       </div>
 
+      <div class="feat-card">
+        <div class="feat-icon">💰</div>
+        <h3><span class="ko">토큰 비용 제로</span><span class="en">Zero token cost</span></h3>
+        <p class="ko">사용량 대시보드는 Claude OAuth 방식의 Usage API를 사용해요. Claude API를 직접 호출하지 않아 토큰이 전혀 소모되지 않아요.</p>
+        <p class="en">The usage dashboard calls Anthropic's OAuth-based Usage API — not the Claude API itself — so it consumes zero tokens.</p>
+      </div>
+
     </div>
   </div>
 </section>
@@ -636,15 +688,19 @@
 <!-- ── INSTALL ───────────────────────────────────────────────────────────────── -->
 <section class="install">
   <div class="inner">
-    <p class="sec-eyebrow">
-      <span class="ko">설치 방법</span><span class="en">Installation</span>
-    </p>
-    <h2 class="sec-title">
-      <span class="ko">설치는 30초면 충분해요</span>
-      <span class="en">Up and running in 30 seconds</span>
-    </h2>
-
-    <div class="install-steps">
+    <div class="install-inner">
+      <div class="install-left">
+        <p class="sec-eyebrow">
+          <span class="ko">설치 방법</span><span class="en">Installation</span>
+        </p>
+        <h2 class="sec-title">
+          <span class="ko">설치는 30초면 충분해요</span>
+          <span class="en">Up and running in 30 seconds</span>
+        </h2>
+        <p class="install-desc ko">인스톨러를 실행하면 위젯 실행부터 Claude Code 훅 등록까지<br />모두 자동으로 처리돼요.</p>
+        <p class="install-desc en">Run the installer and everything is handled automatically — widget launch, hook registration, and startup setup.</p>
+      </div>
+      <div class="install-steps">
       <div class="step">
         <div class="step-num">1</div>
         <div>
@@ -669,6 +725,7 @@
           <p class="en">The widget launches and Claude Code hooks are registered automatically</p>
         </div>
       </div>
+      </div>
     </div>
   </div>
 </section>
@@ -690,15 +747,9 @@
         <path d="M7.5 11.5L2 6l1.41-1.41L7 8.17V1h2v7.17l3.59-3.58L14 6l-5.5 5.5-.5.5-.5-.5z"/>
         <rect x="2" y="13" width="12" height="2"/>
       </svg>
-      <span class="ko">HopClaude 다운로드 — v1.0.0</span>
-      <span class="en">Download HopClaude — v1.0.0</span>
+      <span class="ko">HopClaude 다운로드</span>
+      <span class="en">Download HopClaude</span>
     </a>
-    <p class="cta-note">
-      <a href="https://github.com/hy0zzx/miniclaude/releases">
-        <span class="ko">모든 버전 보기</span><span class="en">All releases</span>
-      </a>
-      &nbsp;·&nbsp; MIT License
-    </p>
   </div>
 </section>
 
@@ -738,6 +789,7 @@
   var vy      = Math.sqrt(2 * GRAVITY * MAX_H);  // initial upward velocity
   var y       = 0.0;
   var bounces = 0;
+  var cycles  = 0;
   var last    = null;
 
   function step(ts) {
@@ -755,7 +807,14 @@
       var r = bounces <= 2 ? R_BIG : R_SMALL;
       vy = Math.abs(vy) * r;
       if (vy < MIN_V) {
-        /* restart cycle — mirrors the waiting_for_click loop in widget */
+        cycles++;
+        if (cycles >= 2) {
+          /* 2 cycles done — stop */
+          char.style.transform = 'translateY(0)';
+          shadow.style.transform = 'scaleX(1)';
+          shadow.style.opacity = '1';
+          return;
+        }
         vy      = Math.sqrt(2 * GRAVITY * MAX_H);
         y       = 0.0;
         bounces = 0;
