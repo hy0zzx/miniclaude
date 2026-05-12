@@ -230,7 +230,7 @@ def run_widget(sw: int, sh: int):
 
     # ── 레이아웃 상수 ──────────────────────────────────────────────────────
     CHAR_W, CHAR_H = 86, 54
-    W, H    = 140, 180          # 창 크기 — H를 넉넉히 잡아 말풍선 클리핑 방지
+    W, H    = 220, 180          # 창 크기 — 말풍선 여유를 위해 W를 충분히 확보
     PAD_B   = 16
     CHAR_X  = (W - CHAR_W) // 2                          # = 27
     CHAR_Y  = H - PAD_B - 6 - 4 - CHAR_H                # = 100  (쉬는 위치 상단)
@@ -498,13 +498,13 @@ def run_widget(sw: int, sh: int):
             tw   = fm.horizontalAdvance(self._speech)
             th   = fm.height()
             px, py = 10, 5
-            bw, bh = tw + px * 2, th + py * 2
+            bw, bh = min(tw + px * 2, W - 8), th + py * 2
             cx     = W // 2
 
             # 캐릭터 최고점 위에 고정 배치 (점프해도 겹치지 않음)
             bot  = CHAR_Y - MAX_H - 10
             top  = bot - bh
-            left = cx - bw // 2
+            left = max(4, min(cx - bw // 2, W - bw - 4))
 
             # 배경 둥근 사각형
             path = QPainterPath()
