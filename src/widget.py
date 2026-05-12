@@ -351,7 +351,7 @@ def run_widget(sw: int, sh: int):
             import random, datetime
             h = datetime.datetime.now().hour
             if 0 <= h < 5:
-                pool = ["나도 졸린데...", "새벽에도 일해요?", "야근이에요?", "같이 졸려요 zzz"]
+                pool = ["너무 졸려요...", "새벽에도 일해요?", "야근이에요?", "굿나잇 zzz"]
             elif 5 <= h < 11:
                 pool = ["좋은 아침이에요!", "잘 주무셨어요?", "오늘도 화이팅!", "굿모닝~"]
             elif 11 <= h < 14:
@@ -361,7 +361,7 @@ def run_widget(sw: int, sh: int):
             elif 18 <= h < 21:
                 pool = ["오늘도 수고하셨어요!", "저녁은 드셨나요?", "슬슬 마무리할 시간~"]
             else:
-                pool = ["늦게까지 고생해요!", "오늘도 수고했어요 :)", "이제 쉬어요~"]
+                pool = ["늦게까지 고생해요!", "오늘도 수고했어요 :)", "오늘도 잘 버텼어요!"]
             self._speech   = random.choice(pool)
             self._speech_a = 255
             self._start_bounce()
