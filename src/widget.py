@@ -238,8 +238,10 @@ def run_widget(sw: int, sh: int):
     SHAD_CY = H - PAD_B - 3                              # = 161
 
     # ── 캐릭터 픽셀아트 ────────────────────────────────────────────────────
-    CORAL = QColor(0xDA, 0x77, 0x57)
-    WHITE = QColor(0xFF, 0xFF, 0xFF)
+    CORAL  = QColor(0xDA, 0x77, 0x57)
+    GREEN  = QColor(0x40, 0xBA, 0x83)
+    ORANGE = QColor(0xE8, 0x93, 0x3A)
+    WHITE  = QColor(0xFF, 0xFF, 0xFF)
     _VW, _VH = 256.0, 160.0
     _sx = lambda v: round(v * CHAR_W / _VW)
     _sy = lambda v: round(v * CHAR_H / _VH)
@@ -634,6 +636,7 @@ def run_widget(sw: int, sh: int):
             self._drag_pos        = QPoint()
             self._press_global    = QPoint()
             self._waiting_for_click = False
+            self._char_color      = CORAL
             self._dashboard       = DashboardWindow()
 
             self._atimer = QTimer(self)
@@ -709,6 +712,7 @@ def run_widget(sw: int, sh: int):
             text = message or ("응답 도착!" if event == "Stop" else "확인 필요!")
             self._speech          = text
             self._speech_a        = 255
+            self._char_color      = GREEN if event == "Stop" else ORANGE
             self._waiting_for_click = True
             # 이전 클릭 누적값 소비 후 감지 시작
             if sys.platform == "win32":
@@ -729,6 +733,7 @@ def run_widget(sw: int, sh: int):
                 clicked = bool(ctypes.windll.user32.GetAsyncKeyState(0x01) & 1)
             if clicked:
                 self._waiting_for_click = False
+                self._char_color = CORAL
                 self._ctimer.stop()
                 self._speech_a = 0
                 self.update()
@@ -820,7 +825,7 @@ def run_widget(sw: int, sh: int):
             p.setPen(Qt.PenStyle.NoPen)
             ox, oy = CHAR_X, CHAR_Y - y_off
             for rx, ry, rw, rh, rc in RECTS:
-                p.setBrush(QBrush(rc))
+                p.setBrush(QBrush(self._char_color if rc is CORAL else rc))
                 p.drawRect(ox + rx, oy + ry, rw, rh)
 
             # 말풍선
