@@ -526,8 +526,10 @@ def run_widget(sw: int, sh: int):
             self.adjustSize()
             g = ref.frameGeometry()
             scr = QGuiApplication.primaryScreen().geometry()
-            x = g.left() + g.width() // 2 - self.width() // 2   # 가로 중앙 정렬
-            y = g.top() - self.height() - 8                       # 캐릭터 머리 위
+            x = g.left() + g.width() // 2 - self.width() // 2
+            # 말풍선과 동일한 기준: 캐릭터 머리 위 10px (CHAR_Y = 창 내 캐릭터 상단 위치)
+            char_screen_top = g.top() + CHAR_Y
+            y = char_screen_top - self.height() - 10
             return (
                 max(0, min(x, scr.width() - self.width())),
                 max(0, min(y, scr.height() - self.height() - 40)),
@@ -669,9 +671,8 @@ def run_widget(sw: int, sh: int):
                 ctypes.windll.user32.GetAsyncKeyState(0x01)  # 잔여 비트 초기화
             self._ctimer.start()
             self._start_bounce()
-            # 대시보드가 열려 있으면 말풍선 위로 올라오도록 re-raise
             if self._dashboard.isVisible():
-                self._dashboard.raise_()
+                self._dashboard.raise_()   # 팝업이 항상 최상단
             self.update()
 
         def _check_click(self):
