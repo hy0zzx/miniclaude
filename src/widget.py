@@ -348,7 +348,21 @@ def run_widget(sw: int, sh: int):
 
         def greet(self):
             """시작 시 한 번만 재생되는 인사 — 클릭 불필요, 2.5초 후 자동 소멸."""
-            self._speech   = "안녕! Claude 응답 오면 알려줄게 :)"
+            import random, datetime
+            h = datetime.datetime.now().hour
+            if 0 <= h < 5:
+                pool = ["나도 졸린데...", "새벽에도 일해요?", "야근이에요?", "같이 졸려요 zzz"]
+            elif 5 <= h < 11:
+                pool = ["좋은 아침이에요!", "잘 주무셨어요?", "오늘도 화이팅!", "굿모닝~"]
+            elif 11 <= h < 14:
+                pool = ["점심은 드셨나요?", "맛있는 거 드세요!", "점심시간이에요~"]
+            elif 14 <= h < 18:
+                pool = ["오후도 화이팅!", "커피 한 잔 어때요?", "집중 잘 되고 있나요?"]
+            elif 18 <= h < 21:
+                pool = ["오늘도 수고하셨어요!", "저녁은 드셨나요?", "슬슬 마무리할 시간~"]
+            else:
+                pool = ["늦게까지 고생해요!", "오늘도 수고했어요 :)", "이제 쉬어요~"]
+            self._speech   = random.choice(pool)
             self._speech_a = 255
             self._start_bounce()
             self.update()
